@@ -55,8 +55,12 @@ export default function AssessmentPage() {
   );
 
   const setNum = (key: string, value: string, max: number) => {
-    const num = Math.min(Math.max(0, Number(value) || 0), max);
-    setForm((p) => ({ ...p, [key]: num }));
+    if (value === "") {
+      setForm((p) => ({ ...p, [key]: 0 }));
+    } else {
+      const num = Math.min(Math.max(0, Number(value) || 0), max);
+      setForm((p) => ({ ...p, [key]: num }));
+    }
   };
 
   const handleSave = () => {
@@ -234,9 +238,9 @@ export default function AssessmentPage() {
                   <td className="pt-4 text-center align-top px-4">
                     <Input
                       type="number" min={0} max={20}
-                      value={form.education_pts}
+                      value={form.education_pts === 0 ? "" : form.education_pts}
                       onChange={(e) => setNum("education_pts", e.target.value, 20)}
-                      className="h-6 w-14 text-xs text-center font-bold mx-auto"
+                      className="h-6 w-14 text-xs text-center font-bold mx-auto [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </td>
                 </tr>
@@ -262,12 +266,12 @@ export default function AssessmentPage() {
                         <span className="text-muted-foreground shrink-0 w-32">No. of hours</span>
                         <Input
                           type="number" min={0}
-                          value={form.training_hours}
+                          value={form.training_hours === 0 ? "" : form.training_hours}
                           onChange={(e) => setForm((p) => ({ ...p, training_hours: Number(e.target.value) || 0 }))}
-                          className="h-5 w-20 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold"
+                          className="h-5 w-20 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                         <span className="text-muted-foreground ml-2 shrink-0">Total no. of hours:</span>
-                        <span className="font-semibold underline ml-1">{form.training_hours}</span>
+                        <span className="font-semibold underline ml-1">{form.training_hours === 0 ? "" : form.training_hours}</span>
                       </div>
                     </div>
                   </td>
@@ -275,9 +279,9 @@ export default function AssessmentPage() {
                   <td className="pt-4 text-center align-top px-4">
                     <Input
                       type="number" min={0} max={15}
-                      value={form.training_pts}
+                      value={form.training_pts === 0 ? "" : form.training_pts}
                       onChange={(e) => setNum("training_pts", e.target.value, 15)}
-                      className="h-6 w-14 text-xs text-center font-bold mx-auto"
+                      className="h-6 w-14 text-xs text-center font-bold mx-auto [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </td>
                 </tr>
@@ -310,9 +314,9 @@ export default function AssessmentPage() {
                         <span className="text-muted-foreground ml-2 shrink-0">Total no. of years:</span>
                         <Input
                           type="number" min={0}
-                          value={form.experience_years}
+                          value={form.experience_years === 0 ? "" : form.experience_years}
                           onChange={(e) => setForm((p) => ({ ...p, experience_years: Number(e.target.value) || 0 }))}
-                          className="h-5 w-14 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold ml-1"
+                          className="h-5 w-14 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold ml-1 [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                       </div>
                     </div>
@@ -321,9 +325,9 @@ export default function AssessmentPage() {
                   <td className="pt-4 text-center align-top px-4">
                     <Input
                       type="number" min={0} max={15}
-                      value={form.experience_pts}
+                      value={form.experience_pts === 0 ? "" : form.experience_pts}
                       onChange={(e) => setNum("experience_pts", e.target.value, 15)}
-                      className="h-6 w-14 text-xs text-center font-bold mx-auto"
+                      className="h-6 w-14 text-xs text-center font-bold mx-auto [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </td>
                 </tr>
@@ -340,9 +344,9 @@ export default function AssessmentPage() {
                   <td className="pt-4 text-center align-top px-4">
                     <Input
                       type="number" min={0} max={10}
-                      value={form.eligibility_pts}
+                      value={form.eligibility_pts === 0 ? "" : form.eligibility_pts}
                       onChange={(e) => setNum("eligibility_pts", e.target.value, 10)}
-                      className="h-6 w-14 text-xs text-center font-bold mx-auto"
+                      className="h-6 w-14 text-xs text-center font-bold mx-auto [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </td>
                 </tr>
