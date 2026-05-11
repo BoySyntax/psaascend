@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import { useApplicants, useCreateApplicant, useUpdateApplicant, useDeleteApplicant, type Applicant } from "@/hooks/useApplicants";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Pencil, Trash2, FileText, ClipboardList, Users, CheckCircle, Clock, AlertTriangle } from "lucide-react";
+import { Plus, Pencil, Trash2, FileText, ClipboardList, Users, CheckCircle, Clock } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 type FormData = Omit<Applicant, "id" | "created_at" | "has_assessment" | "has_interview">;
@@ -140,6 +141,7 @@ function ApplicantForm({ initial, onSubmit, onClose, existingApplicants, isEditi
 
 export default function ApplicantsPage() {
   const { data: applicants, isLoading } = useApplicants();
+  const { isSuperAdmin } = useAuth();
   const createMut = useCreateApplicant();
   const updateMut = useUpdateApplicant();
   const deleteMut = useDeleteApplicant();
@@ -199,34 +201,39 @@ export default function ApplicantsPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Applicants</CardTitle>
-          <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) setEditing(null); }}>
-            <DialogTrigger asChild>
-              <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Add Applicant</Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle>{editing ? "Edit Applicant" : "Add Applicant"}</DialogTitle>
-              </DialogHeader>
-              <ApplicantForm
-                initial={editing ? {
-                  name: editing.name,
-                  previous_position: editing.previous_position,
-                  position_applied: editing.position_applied,
-                  salary_grade: editing.salary_grade,
-                  eligibility: editing.eligibility,
-                  office: editing.office,
-                  contact: editing.contact,
-                  email: editing.email,
-                  vacant_positions: editing.vacant_positions || "",
-                } : emptyForm}
-                onSubmit={editing ? handleUpdate : handleCreate}
-                onClose={() => { setDialogOpen(false); setEditing(null); }}
-                existingApplicants={applicants || []}
-                isEditing={!!editing}
-              />
-            </DialogContent>
-          </Dialog>
+
+          {/* Only superadmin can add applicants */}
+          {isSuperAdmin && (
+            <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) setEditing(null); }}>
+              <DialogTrigger asChild>
+                <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Add Applicant</Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg">
+                <DialogHeader>
+                  <DialogTitle>{editing ? "Edit Applicant" : "Add Applicant"}</DialogTitle>
+                </DialogHeader>
+                <ApplicantForm
+                  initial={editing ? {
+                    name: editing.name,
+                    previous_position: editing.previous_position,
+                    position_applied: editing.position_applied,
+                    salary_grade: editing.salary_grade,
+                    eligibility: editing.eligibility,
+                    office: editing.office,
+                    contact: editing.contact,
+                    email: editing.email,
+                    vacant_positions: editing.vacant_positions || "",
+                  } : emptyForm}
+                  onSubmit={editing ? handleUpdate : handleCreate}
+                  onClose={() => { setDialogOpen(false); setEditing(null); }}
+                  existingApplicants={applicants || []}
+                  isEditing={!!editing}
+                />
+              </DialogContent>
+            </Dialog>
+          )}
         </CardHeader>
+
         <CardContent>
           {isLoading ? (
             <p className="text-muted-foreground text-center py-8">Loading...</p>
@@ -268,30 +275,45 @@ export default function ApplicantsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex justify-end gap-1">
+
+                          {/* ✅ Form 3 visible to ALL accounts, read-only enforced inside AssessmentPage */}
                           <Button variant="ghost" size="sm" asChild>
-                            <Link to={`/assessment/${a.id}`} title="Form 3"><FileText className="h-4 w-4" /></Link>
+                            <Link to={`/assessment/${a.id}`} title="Form 3">
+                              <FileText className="h-4 w-4" />
+                            </Link>
                           </Button>
+
+                          {/* Form 4 for everyone */}
                           <Button variant="ghost" size="sm" asChild>
-                            <Link to={`/interview/${a.id}`} title="Form 4"><ClipboardList className="h-4 w-4" /></Link>
+                            <Link to={`/interview/${a.id}`} title="Form 4">
+                              <ClipboardList className="h-4 w-4" />
+                            </Link>
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => { setEditing(a); setDialogOpen(true); }}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="sm"><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete applicant?</AlertDialogTitle>
-                                <AlertDialogDescription>This will also delete their assessment and interview data.</AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => deleteMut.mutate(a.id)}>Delete</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+
+                          {/* Edit and Delete only for superadmin */}
+                          {isSuperAdmin && (
+                            <>
+                              <Button variant="ghost" size="sm" onClick={() => { setEditing(a); setDialogOpen(true); }}>
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="sm"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete applicant?</AlertDialogTitle>
+                                    <AlertDialogDescription>This will also delete their assessment and interview data.</AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => deleteMut.mutate(a.id)}>Delete</AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </>
+                          )}
+
                         </div>
                       </TableCell>
                     </TableRow>

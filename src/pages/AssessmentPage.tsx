@@ -3,13 +3,56 @@ import { useParams, Link } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import { useAssessment, useSaveAssessment } from "@/hooks/useAssessment";
 import { useApplicants } from "@/hooks/useApplicants";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Printer, Save } from "lucide-react";
 
+// ✅ Moved OUTSIDE the page component to prevent focus loss on every keystroke
+function Field({
+  value,
+  onChange,
+  className,
+  placeholder,
+  type = "text",
+  min,
+  max,
+  isSuperAdmin,
+}: {
+  value: string | number;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  className?: string;
+  placeholder?: string;
+  type?: string;
+  min?: number;
+  max?: number;
+  isSuperAdmin: boolean;
+}) {
+  if (isSuperAdmin) {
+    return (
+      <Input
+        type={type}
+        min={min}
+        max={max}
+        value={value}
+        onChange={onChange}
+        className={className}
+        placeholder={placeholder}
+      />
+    );
+  }
+  const display = value === 0 || value === "" ? "—" : String(value);
+  return (
+    <span className={`font-semibold uppercase ${className ?? ""}`}>
+      {display}
+    </span>
+  );
+}
+
 export default function AssessmentPage() {
   const { id } = useParams<{ id: string }>();
+  const { isSuperAdmin } = useAuth();
   const { data: applicants } = useApplicants();
   const applicant = applicants?.find((a) => a.id === id);
   const { data: existing, isLoading } = useAssessment(id || "");
@@ -88,9 +131,11 @@ export default function AssessmentPage() {
         <Button variant="outline" size="sm" onClick={() => window.print()}>
           <Printer className="h-4 w-4 mr-1" /> Print
         </Button>
-        <Button size="sm" onClick={handleSave} disabled={saveMut.isPending}>
-          <Save className="h-4 w-4 mr-1" /> Save
-        </Button>
+        {isSuperAdmin && (
+          <Button size="sm" onClick={handleSave} disabled={saveMut.isPending}>
+            <Save className="h-4 w-4 mr-1" /> Save
+          </Button>
+        )}
       </div>
 
       <Card className="print-full-width overflow-hidden">
@@ -136,7 +181,8 @@ export default function AssessmentPage() {
               <tr>
                 <td className="border border-gray-300 px-2 py-1">
                   <p className="text-[10px] text-muted-foreground">Salary Grade:</p>
-                  <Input
+                  <Field
+                    isSuperAdmin={isSuperAdmin}
                     value={form.salary_grade_input}
                     onChange={(e) => setForm((p) => ({ ...p, salary_grade_input: e.target.value }))}
                     className="mt-0.5 h-7 text-xs"
@@ -151,7 +197,8 @@ export default function AssessmentPage() {
               <tr>
                 <td className="border border-gray-300 px-2 py-1">
                   <p className="text-[10px] text-muted-foreground">Office:</p>
-                  <Input
+                  <Field
+                    isSuperAdmin={isSuperAdmin}
                     value={form.office_service_unit_region}
                     onChange={(e) => setForm((p) => ({ ...p, office_service_unit_region: e.target.value }))}
                     className="mt-0.5 h-7 text-xs"
@@ -166,7 +213,8 @@ export default function AssessmentPage() {
               <tr>
                 <td className="border border-gray-300 px-2 py-1">
                   <p className="text-[10px] text-muted-foreground">Division/Province:</p>
-                  <Input
+                  <Field
+                    isSuperAdmin={isSuperAdmin}
                     value={form.division_province}
                     onChange={(e) => setForm((p) => ({ ...p, division_province: e.target.value }))}
                     className="mt-0.5 h-7 text-xs"
@@ -175,7 +223,8 @@ export default function AssessmentPage() {
                 </td>
                 <td className="border border-gray-300 px-2 py-1">
                   <p className="text-[10px] text-muted-foreground">Division/Province:</p>
-                  <Input
+                  <Field
+                    isSuperAdmin={isSuperAdmin}
                     value={form.division_province_current}
                     onChange={(e) => setForm((p) => ({ ...p, division_province_current: e.target.value }))}
                     className="mt-0.5 h-7 text-xs"
@@ -216,7 +265,8 @@ export default function AssessmentPage() {
                     <div className="mt-2 space-y-2 pl-6">
                       <div className="flex items-center gap-2">
                         <span className="text-muted-foreground shrink-0 w-32">Highest Degree</span>
-                        <Input
+                        <Field
+                          isSuperAdmin={isSuperAdmin}
                           value={form.education_degree}
                           onChange={(e) => setForm((p) => ({ ...p, education_degree: e.target.value }))}
                           className="h-5 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold uppercase"
@@ -225,7 +275,8 @@ export default function AssessmentPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-muted-foreground shrink-0 w-32">Course</span>
-                        <Input
+                        <Field
+                          isSuperAdmin={isSuperAdmin}
                           value={form.education_course}
                           onChange={(e) => setForm((p) => ({ ...p, education_course: e.target.value }))}
                           className="h-5 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold uppercase"
@@ -236,7 +287,8 @@ export default function AssessmentPage() {
                   </td>
                   <td className="pt-4 text-center align-top font-semibold px-4">20</td>
                   <td className="pt-4 text-center align-top px-4">
-                    <Input
+                    <Field
+                      isSuperAdmin={isSuperAdmin}
                       type="number" min={0} max={20}
                       value={form.education_pts === 0 ? "" : form.education_pts}
                       onChange={(e) => setNum("education_pts", e.target.value, 20)}
@@ -255,7 +307,8 @@ export default function AssessmentPage() {
                     <div className="mt-2 space-y-2 pl-6">
                       <div className="flex items-center gap-2">
                         <span className="text-muted-foreground shrink-0 w-32">Training/Seminar</span>
-                        <Input
+                        <Field
+                          isSuperAdmin={isSuperAdmin}
                           value={form.training_name}
                           onChange={(e) => setForm((p) => ({ ...p, training_name: e.target.value }))}
                           className="h-5 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold"
@@ -264,7 +317,8 @@ export default function AssessmentPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-muted-foreground shrink-0 w-32">No. of hours</span>
-                        <Input
+                        <Field
+                          isSuperAdmin={isSuperAdmin}
                           type="number" min={0}
                           value={form.training_hours === 0 ? "" : form.training_hours}
                           onChange={(e) => setForm((p) => ({ ...p, training_hours: Number(e.target.value) || 0 }))}
@@ -277,7 +331,8 @@ export default function AssessmentPage() {
                   </td>
                   <td className="pt-4 text-center align-top font-semibold px-4">15</td>
                   <td className="pt-4 text-center align-top px-4">
-                    <Input
+                    <Field
+                      isSuperAdmin={isSuperAdmin}
                       type="number" min={0} max={15}
                       value={form.training_pts === 0 ? "" : form.training_pts}
                       onChange={(e) => setNum("training_pts", e.target.value, 15)}
@@ -296,7 +351,8 @@ export default function AssessmentPage() {
                     <div className="mt-2 space-y-2 pl-6">
                       <div className="flex items-center gap-2">
                         <span className="text-muted-foreground shrink-0 w-32">Work Experience</span>
-                        <Input
+                        <Field
+                          isSuperAdmin={isSuperAdmin}
                           value={form.experience_name}
                           onChange={(e) => setForm((p) => ({ ...p, experience_name: e.target.value }))}
                           className="h-5 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold"
@@ -305,14 +361,16 @@ export default function AssessmentPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-muted-foreground shrink-0 w-32">No. of years</span>
-                        <Input
+                        <Field
+                          isSuperAdmin={isSuperAdmin}
                           value={form.experience_duration}
                           onChange={(e) => setForm((p) => ({ ...p, experience_duration: e.target.value }))}
                           className="h-5 w-36 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold"
                           placeholder="e.g. 4 years and 6 months"
                         />
                         <span className="text-muted-foreground ml-2 shrink-0">Total no. of years:</span>
-                        <Input
+                        <Field
+                          isSuperAdmin={isSuperAdmin}
                           type="number" min={0}
                           value={form.experience_years === 0 ? "" : form.experience_years}
                           onChange={(e) => setForm((p) => ({ ...p, experience_years: Number(e.target.value) || 0 }))}
@@ -323,7 +381,8 @@ export default function AssessmentPage() {
                   </td>
                   <td className="pt-4 text-center align-top font-semibold px-4">15</td>
                   <td className="pt-4 text-center align-top px-4">
-                    <Input
+                    <Field
+                      isSuperAdmin={isSuperAdmin}
                       type="number" min={0} max={15}
                       value={form.experience_pts === 0 ? "" : form.experience_pts}
                       onChange={(e) => setNum("experience_pts", e.target.value, 15)}
@@ -342,7 +401,8 @@ export default function AssessmentPage() {
                   </td>
                   <td className="pt-4 text-center align-top font-semibold px-4">10</td>
                   <td className="pt-4 text-center align-top px-4">
-                    <Input
+                    <Field
+                      isSuperAdmin={isSuperAdmin}
                       type="number" min={0} max={10}
                       value={form.eligibility_pts === 0 ? "" : form.eligibility_pts}
                       onChange={(e) => setNum("eligibility_pts", e.target.value, 10)}

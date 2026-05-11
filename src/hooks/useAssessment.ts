@@ -8,6 +8,7 @@ export type Assessment = {
   applicant_id: string;
   office_service_unit_region: string | null;
   division_province: string | null;
+  division_province_current: string | null;
   salary_grade_input: string | null;
   education_pts: number;
   education_degree: string | null;
@@ -27,21 +28,20 @@ export type Assessment = {
 };
 
 export function useAssessment(applicantId: string) {
-  const { user } = useAuth();
   return useQuery({
-    queryKey: ["assessment", applicantId, user?.id],
+    queryKey: ["assessment", applicantId],
     queryFn: async () => {
-      if (!user?.id) return null;
+      if (!applicantId) return null;
       const { data, error } = await supabase
         .from("assessments")
         .select("*")
         .eq("applicant_id", applicantId)
-        .eq("user_id", user.id)
         .maybeSingle();
       if (error) throw error;
       return data;
     },
-    enabled: !!applicantId && !!user?.id,
+    enabled: !!applicantId,
+    staleTime: 0,
   });
 }
 
@@ -51,12 +51,10 @@ export function useSaveAssessment() {
   return useMutation({
     mutationFn: async (data: Omit<Assessment, "id"> & { id?: string }) => {
       if (!user?.id) throw new Error("Not authenticated");
-      const dataWithUser = { ...data, user_id: user.id };
-      // Remove id from upsert payload to avoid conflicts
-      const { id, ...upsertData } = dataWithUser as typeof dataWithUser & { id?: string };
+      const { id, ...upsertData } = { ...data, user_id: user.id } as typeof data & { id?: string };
       const { error } = await supabase
         .from("assessments")
-        .upsert(upsertData, { onConflict: "applicant_id,user_id" });
+        .upsert(upsertData, { onConflict: "applicant_id" });
       if (error) throw error;
     },
     onSuccess: (_, vars) => {
