@@ -61,6 +61,7 @@ export type Database = {
           applicant_id: string
           attested_by: string | null
           created_at: string
+          division_province: string | null
           education_course: string | null
           education_degree: string | null
           education_pts: number | null
@@ -71,7 +72,9 @@ export type Database = {
           experience_pts: number | null
           experience_years: number | null
           id: string
+          office_service_unit_region: string | null
           reviewed_by: string | null
+          salary_grade_input: string | null
           training_hours: number | null
           training_name: string | null
           training_pts: number | null
@@ -81,6 +84,7 @@ export type Database = {
           applicant_id: string
           attested_by?: string | null
           created_at?: string
+          division_province?: string | null
           education_course?: string | null
           education_degree?: string | null
           education_pts?: number | null
@@ -91,7 +95,9 @@ export type Database = {
           experience_pts?: number | null
           experience_years?: number | null
           id?: string
+          office_service_unit_region?: string | null
           reviewed_by?: string | null
+          salary_grade_input?: string | null
           training_hours?: number | null
           training_name?: string | null
           training_pts?: number | null
@@ -101,6 +107,7 @@ export type Database = {
           applicant_id?: string
           attested_by?: string | null
           created_at?: string
+          division_province?: string | null
           education_course?: string | null
           education_degree?: string | null
           education_pts?: number | null
@@ -111,7 +118,9 @@ export type Database = {
           experience_pts?: number | null
           experience_years?: number | null
           id?: string
+          office_service_unit_region?: string | null
           reviewed_by?: string | null
+          salary_grade_input?: string | null
           training_hours?: number | null
           training_name?: string | null
           training_pts?: number | null

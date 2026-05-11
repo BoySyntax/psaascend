@@ -398,19 +398,6 @@ export default function RankingsPage() {
           </div>
         )}
 
-        {/* Rater count info */}
-        {!isLoading && filteredRows.length > 0 && (
-          <div className="no-print" style={{ display: "flex", gap: "16px", fontSize: "11px", color: "#6b7280", padding: "6px 12px", background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "6px" }}>
-            <span>
-              📋 Form 3 raters: <strong style={{ color: "#1d4ed8" }}>{filteredRows[0]?.rater_count_assess ?? 0}</strong>
-            </span>
-            <span>
-              🗣️ Form 4 raters: <strong style={{ color: "#1d4ed8" }}>{filteredRows[0]?.rater_count_inter ?? 0}</strong>
-            </span>
-            <span style={{ color: "#9ca3af" }}>Scores shown are averages across all raters</span>
-          </div>
-        )}
-
         {/* Position Info */}
         <div style={{ padding: "12px", background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "8px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 1fr", gap: "12px" }}>
@@ -531,7 +518,7 @@ export default function RankingsPage() {
               {[
                 { title: "Prepared by:", sub: "Designation" },
                 { title: "Reviewed by:", sub: "Designation" },
-                { title: "Evaluated/Deliberated by the ROHRMPSB:", sub: "Chairperson" },
+                { title: "Evaluated/Deliberated by the PSA A.S.C.E.N.D:", sub: "Chairperson" },
               ].map(({ title, sub }) => (
                 <div key={title} style={{ border: "1px solid #9ca3af", padding: "10px" }}>
                   <div style={{ fontWeight: 600, marginBottom: "24px" }}>{title}</div>

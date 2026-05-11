@@ -5,7 +5,6 @@ import { useInterview, useSaveInterview } from "@/hooks/useInterview";
 import { useApplicants } from "@/hooks/useApplicants";
 import { COMPETENCIES, RATING_LABELS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -21,8 +20,6 @@ export default function InterviewPage() {
   const [scores, setScores] = useState<Record<string, number>>({
     c1: 0, c2: 0, c3: 0, c4: 0, c5: 0, c6: 0, c7: 0, c8: 0, c9: 0, c10: 0,
   });
-  const [ratedBy, setRatedBy] = useState("");
-  const [interviewDate, setInterviewDate] = useState("");
 
   useEffect(() => {
     if (existing) {
@@ -30,8 +27,6 @@ export default function InterviewPage() {
         c1: existing.c1, c2: existing.c2, c3: existing.c3, c4: existing.c4, c5: existing.c5,
         c6: existing.c6, c7: existing.c7, c8: existing.c8, c9: existing.c9, c10: existing.c10,
       });
-      setRatedBy(existing.rated_by || "");
-      setInterviewDate(existing.interview_date || "");
     }
   }, [existing]);
 
@@ -46,8 +41,6 @@ export default function InterviewPage() {
       ...(existing?.id ? { id: existing.id } : {}),
       applicant_id: id,
       ...scores as { c1: number; c2: number; c3: number; c4: number; c5: number; c6: number; c7: number; c8: number; c9: number; c10: number },
-      rated_by: ratedBy,
-      interview_date: interviewDate || null,
     });
   };
 
@@ -116,20 +109,6 @@ export default function InterviewPage() {
             <p className="text-sm text-muted-foreground">TOTAL (Part II)</p>
             <p className="text-3xl font-bold text-primary">{total} <span className="text-base font-normal text-muted-foreground">/ 40</span></p>
           </div>
-
-          {/* Interviewer info */}
-          <section className="border-t pt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="grid gap-1">
-                <Label className="text-xs">Interviewed / Rated By</Label>
-                <Input value={ratedBy} onChange={(e) => setRatedBy(e.target.value)} />
-              </div>
-              <div className="grid gap-1">
-                <Label className="text-xs">Date</Label>
-                <Input type="date" value={interviewDate} onChange={(e) => setInterviewDate(e.target.value)} />
-              </div>
-            </div>
-          </section>
         </CardContent>
       </Card>
     </AppLayout>

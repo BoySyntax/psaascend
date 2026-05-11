@@ -6,6 +6,9 @@ import { useAuth } from "@/contexts/AuthContext";
 export type Assessment = {
   id: string;
   applicant_id: string;
+  office_service_unit_region: string | null;
+  division_province: string | null;
+  salary_grade_input: string | null;
   education_pts: number;
   education_degree: string | null;
   education_course: string | null;
@@ -20,7 +23,7 @@ export type Assessment = {
   evaluated_by: string | null;
   reviewed_by: string | null;
   attested_by: string | null;
-  user_id: string | null;
+  user_id?: string | null;
 };
 
 export function useAssessment(applicantId: string) {

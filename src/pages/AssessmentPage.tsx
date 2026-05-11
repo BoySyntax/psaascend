@@ -5,7 +5,6 @@ import { useAssessment, useSaveAssessment } from "@/hooks/useAssessment";
 import { useApplicants } from "@/hooks/useApplicants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Printer, Save } from "lucide-react";
 
@@ -17,16 +16,23 @@ export default function AssessmentPage() {
   const saveMut = useSaveAssessment();
 
   const [form, setForm] = useState({
+    office_service_unit_region: "",
+    division_province: "",
+    division_province_current: "",
+    salary_grade_input: "",
     education_degree: "", education_course: "", education_pts: 0,
     training_name: "", training_hours: 0, training_pts: 0,
     experience_name: "", experience_duration: "", experience_years: 0, experience_pts: 0,
     eligibility_pts: 0,
-    evaluated_by: "", reviewed_by: "", attested_by: "",
   });
 
   useEffect(() => {
     if (existing) {
       setForm({
+        office_service_unit_region: existing.office_service_unit_region || "",
+        division_province: existing.division_province || "",
+        division_province_current: existing.division_province_current || "",
+        salary_grade_input: existing.salary_grade_input || "",
         education_degree: existing.education_degree || "",
         education_course: existing.education_course || "",
         education_pts: Number(existing.education_pts) || 0,
@@ -38,9 +44,6 @@ export default function AssessmentPage() {
         experience_years: Number(existing.experience_years) || 0,
         experience_pts: Number(existing.experience_pts) || 0,
         eligibility_pts: Number(existing.eligibility_pts) || 0,
-        evaluated_by: existing.evaluated_by || "",
-        reviewed_by: existing.reviewed_by || "",
-        attested_by: existing.attested_by || "",
       });
     }
   }, [existing]);
@@ -62,6 +65,10 @@ export default function AssessmentPage() {
       ...(existing?.id ? { id: existing.id } : {}),
       applicant_id: id,
       ...form,
+      evaluated_by: existing?.evaluated_by || null,
+      reviewed_by: existing?.reviewed_by || null,
+      attested_by: existing?.attested_by || null,
+      user_id: existing?.user_id || null,
     });
   };
 
@@ -82,112 +89,280 @@ export default function AssessmentPage() {
         </Button>
       </div>
 
-      <Card className="print-full-width">
-        <CardHeader className="text-center border-b">
+      <Card className="print-full-width overflow-hidden">
+        <CardHeader className="text-center border-b pb-3">
           <p className="text-xs text-muted-foreground">PSA A.S.C.E.N.D Form 3</p>
           <CardTitle className="text-lg">Individual Assessment Form</CardTitle>
-          {applicant && (
-            <div className="text-sm text-muted-foreground">
-              <p><strong>Applicant:</strong> {applicant.name}</p>
-              <p><strong>Position Applied:</strong> {applicant.position_applied} | <strong>SG:</strong> {applicant.salary_grade || "—"}</p>
-            </div>
-          )}
         </CardHeader>
-        <CardContent className="space-y-6 pt-6">
-          {/* I. Education */}
-          <section>
-            <h3 className="font-semibold text-sm border-b pb-1 mb-3">I. Education (Max 20 pts)</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="grid gap-1">
-                <Label className="text-xs">Highest Degree</Label>
-                <Input value={form.education_degree} onChange={(e) => setForm((p) => ({ ...p, education_degree: e.target.value }))} />
-              </div>
-              <div className="grid gap-1">
-                <Label className="text-xs">Course Name</Label>
-                <Input value={form.education_course} onChange={(e) => setForm((p) => ({ ...p, education_course: e.target.value }))} />
-              </div>
-              <div className="grid gap-1">
-                <Label className="text-xs">Points Obtained (max 20)</Label>
-                <Input type="number" min={0} max={20} value={form.education_pts} onChange={(e) => setNum("education_pts", e.target.value, 20)} />
-              </div>
-            </div>
-          </section>
 
-          {/* II. Relevant Training */}
-          <section>
-            <h3 className="font-semibold text-sm border-b pb-1 mb-3">II. Relevant Training (Max 15 pts)</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="grid gap-1">
-                <Label className="text-xs">Seminar/Training Name</Label>
-                <Input value={form.training_name} onChange={(e) => setForm((p) => ({ ...p, training_name: e.target.value }))} />
-              </div>
-              <div className="grid gap-1">
-                <Label className="text-xs">Total Hours</Label>
-                <Input type="number" min={0} value={form.training_hours} onChange={(e) => setForm((p) => ({ ...p, training_hours: Number(e.target.value) || 0 }))} />
-              </div>
-              <div className="grid gap-1">
-                <Label className="text-xs">Points Obtained (max 15)</Label>
-                <Input type="number" min={0} max={15} value={form.training_pts} onChange={(e) => setNum("training_pts", e.target.value, 15)} />
-              </div>
-            </div>
-          </section>
+        <CardContent className="p-0">
 
-          {/* III. Relevant Work Experience */}
-          <section>
-            <h3 className="font-semibold text-sm border-b pb-1 mb-3">III. Relevant Work Experience (Max 15 pts)</h3>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="grid gap-1">
-                <Label className="text-xs">Position</Label>
-                <Input value={form.experience_name} onChange={(e) => setForm((p) => ({ ...p, experience_name: e.target.value }))} />
-              </div>
-              <div className="grid gap-1">
-                <Label className="text-xs">Duration</Label>
-                <Input value={form.experience_duration} onChange={(e) => setForm((p) => ({ ...p, experience_duration: e.target.value }))} />
-              </div>
-              <div className="grid gap-1">
-                <Label className="text-xs">Total Years</Label>
-                <Input type="number" min={0} value={form.experience_years} onChange={(e) => setForm((p) => ({ ...p, experience_years: Number(e.target.value) || 0 }))} />
-              </div>
-              <div className="grid gap-1">
-                <Label className="text-xs">Points Obtained (max 15)</Label>
-                <Input type="number" min={0} max={15} value={form.experience_pts} onChange={(e) => setNum("experience_pts", e.target.value, 15)} />
-              </div>
-            </div>
-          </section>
+          <table className="w-full text-xs border-collapse border-b border-gray-300">
+            <tbody>
+              <tr>
+                <td className="border border-gray-300 px-2 py-1 w-1/2">
+                  <p className="text-[10px] text-muted-foreground">Name of Applicant: (Last, First and Middle Name)</p>
+                  <p className="font-bold text-sm mt-0.5 uppercase">{applicant?.name || "—"}</p>
+                </td>
+                <td className="border border-gray-300 px-2 py-1 w-1/2">
+                  <p className="text-[10px] text-muted-foreground">Eligibility:</p>
+                  <p className="font-bold mt-0.5 uppercase">{applicant?.eligibility || "—"}</p>
+                </td>
+              </tr>
+              <tr>
+                <td className="border border-gray-300 px-2 py-1">
+                  <p className="text-[10px] text-muted-foreground">Contact Number:</p>
+                  <p className="font-semibold mt-0.5">{applicant?.contact || "—"}</p>
+                </td>
+                <td className="border border-gray-300 px-2 py-1">
+                  <p className="text-[10px] text-muted-foreground">Email Address:</p>
+                  <p className="font-semibold mt-0.5">{applicant?.email || "—"}</p>
+                </td>
+              </tr>
+              <tr>
+                <td className="border border-gray-300 px-2 py-1">
+                  <p className="text-[10px] text-muted-foreground">Previous Position:</p>
+                  <p className="font-semibold mt-0.5 uppercase">{applicant?.previous_position || "—"}</p>
+                </td>
+                <td className="border border-gray-300 px-2 py-1">
+                  <p className="text-[10px] text-muted-foreground">Position Applied For:</p>
+                  <p className="font-semibold mt-0.5 uppercase">{applicant?.position_applied || "—"}</p>
+                </td>
+              </tr>
+              <tr>
+                <td className="border border-gray-300 px-2 py-1">
+                  <p className="text-[10px] text-muted-foreground">Salary Grade:</p>
+                  <Input
+                    value={form.salary_grade_input}
+                    onChange={(e) => setForm((p) => ({ ...p, salary_grade_input: e.target.value }))}
+                    className="mt-0.5 h-7 text-xs"
+                    placeholder="Enter salary grade"
+                  />
+                </td>
+                <td className="border border-gray-300 px-2 py-1">
+                  <p className="text-[10px] text-muted-foreground">Salary Grade:</p>
+                  <p className="font-semibold mt-0.5">{applicant?.salary_grade || "—"}</p>
+                </td>
+              </tr>
+              <tr>
+                <td className="border border-gray-300 px-2 py-1">
+                  <p className="text-[10px] text-muted-foreground">Office:</p>
+                  <Input
+                    value={form.office_service_unit_region}
+                    onChange={(e) => setForm((p) => ({ ...p, office_service_unit_region: e.target.value }))}
+                    className="mt-0.5 h-7 text-xs"
+                    placeholder="Enter office/service/unit/region"
+                  />
+                </td>
+                <td className="border border-gray-300 px-2 py-1">
+                  <p className="text-[10px] text-muted-foreground">Office/Service/Unit/Region:</p>
+                  <p className="font-semibold mt-0.5 uppercase">{applicant?.office || "—"}</p>
+                </td>
+              </tr>
+              <tr>
+                <td className="border border-gray-300 px-2 py-1">
+                  <p className="text-[10px] text-muted-foreground">Division/Province:</p>
+                  <Input
+                    value={form.division_province}
+                    onChange={(e) => setForm((p) => ({ ...p, division_province: e.target.value }))}
+                    className="mt-0.5 h-7 text-xs"
+                    placeholder="Enter division/province"
+                  />
+                </td>
+                <td className="border border-gray-300 px-2 py-1">
+                  <p className="text-[10px] text-muted-foreground">Division/Province:</p>
+                  <Input
+                    value={form.division_province_current}
+                    onChange={(e) => setForm((p) => ({ ...p, division_province_current: e.target.value }))}
+                    className="mt-0.5 h-7 text-xs"
+                    placeholder="Enter division/province"
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
-          {/* IV. Eligibility */}
-          <section>
-            <h3 className="font-semibold text-sm border-b pb-1 mb-3">IV. Eligibility (Max 10 pts)</h3>
-            <div className="grid gap-1 max-w-xs">
-              <Label className="text-xs">Points Obtained (max 10)</Label>
-              <Input type="number" min={0} max={10} value={form.eligibility_pts} onChange={(e) => setNum("eligibility_pts", e.target.value, 10)} />
-            </div>
-          </section>
-
-          {/* Total */}
-          <div className="bg-secondary rounded-lg p-4 text-center">
-            <p className="text-sm text-muted-foreground">TOTAL (Part I)</p>
-            <p className="text-3xl font-bold text-primary">{total} <span className="text-base font-normal text-muted-foreground">/ 60</span></p>
+          <div className="px-4 pt-4 pb-1">
+            <p className="text-xs font-bold uppercase">Qualification Standards</p>
+            <p className="text-[10px] text-muted-foreground italic">(To be accomplished by HRMPSB Member)</p>
           </div>
 
-          {/* Signatures */}
-          <section className="border-t pt-4">
-            <h3 className="font-semibold text-sm mb-3">Signatures</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="grid gap-1">
-                <Label className="text-xs">Evaluated By</Label>
-                <Input value={form.evaluated_by} onChange={(e) => setForm((p) => ({ ...p, evaluated_by: e.target.value }))} />
-              </div>
-              <div className="grid gap-1">
-                <Label className="text-xs">Reviewed By</Label>
-                <Input value={form.reviewed_by} onChange={(e) => setForm((p) => ({ ...p, reviewed_by: e.target.value }))} />
-              </div>
-              <div className="grid gap-1">
-                <Label className="text-xs">Attested By</Label>
-                <Input value={form.attested_by} onChange={(e) => setForm((p) => ({ ...p, attested_by: e.target.value }))} />
-              </div>
-            </div>
-          </section>
+          <div className="px-4 pb-6">
+            <table className="w-full text-xs mt-3 border-collapse">
+              <thead>
+                <tr>
+                  <th className="text-left w-full"></th>
+                  <th className="text-center text-[10px] font-semibold pb-1 px-4 whitespace-nowrap border-b border-foreground">
+                    Maximum<br />Points
+                  </th>
+                  <th className="text-center text-[10px] font-semibold pb-1 px-4 whitespace-nowrap border-b border-foreground">
+                    Points<br />Obtained
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+
+                {/* I. Education */}
+                <tr>
+                  <td className="pt-4 pb-1 align-top">
+                    <div className="flex items-center gap-1">
+                      <span className="font-semibold shrink-0">I.&nbsp;&nbsp;Education</span>
+                      <div className="flex-1 border-b border-dashed border-gray-400"></div>
+                    </div>
+                    <div className="mt-2 space-y-2 pl-6">
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground shrink-0 w-32">Highest Degree</span>
+                        <Input
+                          value={form.education_degree}
+                          onChange={(e) => setForm((p) => ({ ...p, education_degree: e.target.value }))}
+                          className="h-5 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold uppercase"
+                          placeholder="e.g. Doctorate"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground shrink-0 w-32">Course</span>
+                        <Input
+                          value={form.education_course}
+                          onChange={(e) => setForm((p) => ({ ...p, education_course: e.target.value }))}
+                          className="h-5 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold uppercase"
+                          placeholder="e.g. Bachelor of Science in..."
+                        />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="pt-4 text-center align-top font-semibold px-4">20</td>
+                  <td className="pt-4 text-center align-top px-4">
+                    <Input
+                      type="number" min={0} max={20}
+                      value={form.education_pts}
+                      onChange={(e) => setNum("education_pts", e.target.value, 20)}
+                      className="h-6 w-14 text-xs text-center font-bold mx-auto"
+                    />
+                  </td>
+                </tr>
+
+                {/* II. Relevant Training */}
+                <tr>
+                  <td className="pt-4 pb-1 align-top">
+                    <div className="flex items-center gap-1">
+                      <span className="font-semibold shrink-0">II.&nbsp;&nbsp;Relevant Training</span>
+                      <div className="flex-1 border-b border-dashed border-gray-400"></div>
+                    </div>
+                    <div className="mt-2 space-y-2 pl-6">
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground shrink-0 w-32">Training/Seminar</span>
+                        <Input
+                          value={form.training_name}
+                          onChange={(e) => setForm((p) => ({ ...p, training_name: e.target.value }))}
+                          className="h-5 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold"
+                          placeholder="e.g. Clinical Legal Education..."
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground shrink-0 w-32">No. of hours</span>
+                        <Input
+                          type="number" min={0}
+                          value={form.training_hours}
+                          onChange={(e) => setForm((p) => ({ ...p, training_hours: Number(e.target.value) || 0 }))}
+                          className="h-5 w-20 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold"
+                        />
+                        <span className="text-muted-foreground ml-2 shrink-0">Total no. of hours:</span>
+                        <span className="font-semibold underline ml-1">{form.training_hours}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="pt-4 text-center align-top font-semibold px-4">15</td>
+                  <td className="pt-4 text-center align-top px-4">
+                    <Input
+                      type="number" min={0} max={15}
+                      value={form.training_pts}
+                      onChange={(e) => setNum("training_pts", e.target.value, 15)}
+                      className="h-6 w-14 text-xs text-center font-bold mx-auto"
+                    />
+                  </td>
+                </tr>
+
+                {/* III. Relevant Work Experience */}
+                <tr>
+                  <td className="pt-4 pb-1 align-top">
+                    <div className="flex items-center gap-1">
+                      <span className="font-semibold shrink-0">III.&nbsp;&nbsp;Relevant Work Experience</span>
+                      <div className="flex-1 border-b border-dashed border-gray-400"></div>
+                    </div>
+                    <div className="mt-2 space-y-2 pl-6">
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground shrink-0 w-32">Work Experience</span>
+                        <Input
+                          value={form.experience_name}
+                          onChange={(e) => setForm((p) => ({ ...p, experience_name: e.target.value }))}
+                          className="h-5 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold"
+                          placeholder="e.g. Compliance Officer"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground shrink-0 w-32">No. of years</span>
+                        <Input
+                          value={form.experience_duration}
+                          onChange={(e) => setForm((p) => ({ ...p, experience_duration: e.target.value }))}
+                          className="h-5 w-36 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold"
+                          placeholder="e.g. 4 years and 6 months"
+                        />
+                        <span className="text-muted-foreground ml-2 shrink-0">Total no. of years:</span>
+                        <Input
+                          type="number" min={0}
+                          value={form.experience_years}
+                          onChange={(e) => setForm((p) => ({ ...p, experience_years: Number(e.target.value) || 0 }))}
+                          className="h-5 w-14 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold ml-1"
+                        />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="pt-4 text-center align-top font-semibold px-4">15</td>
+                  <td className="pt-4 text-center align-top px-4">
+                    <Input
+                      type="number" min={0} max={15}
+                      value={form.experience_pts}
+                      onChange={(e) => setNum("experience_pts", e.target.value, 15)}
+                      className="h-6 w-14 text-xs text-center font-bold mx-auto"
+                    />
+                  </td>
+                </tr>
+
+                {/* IV. Eligibility */}
+                <tr>
+                  <td className="pt-4 pb-1 align-top">
+                    <div className="flex items-center gap-1">
+                      <span className="font-semibold shrink-0">IV.&nbsp;&nbsp;Eligibility</span>
+                      <div className="flex-1 border-b border-dashed border-gray-400"></div>
+                    </div>
+                  </td>
+                  <td className="pt-4 text-center align-top font-semibold px-4">10</td>
+                  <td className="pt-4 text-center align-top px-4">
+                    <Input
+                      type="number" min={0} max={10}
+                      value={form.eligibility_pts}
+                      onChange={(e) => setNum("eligibility_pts", e.target.value, 10)}
+                      className="h-6 w-14 text-xs text-center font-bold mx-auto"
+                    />
+                  </td>
+                </tr>
+
+                {/* TOTAL */}
+                <tr className="border-t-2 border-foreground">
+                  <td className="pt-2 align-middle">
+                    <div className="flex items-center gap-1">
+                      <span className="font-bold text-sm shrink-0">TOTAL</span>
+                      <div className="flex-1 border-b border-dashed border-gray-400"></div>
+                    </div>
+                  </td>
+                  <td className="pt-2 text-center font-bold text-sm px-4">60</td>
+                  <td className="pt-2 text-center font-bold text-sm px-4 text-primary">{total}</td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+
         </CardContent>
       </Card>
     </AppLayout>
