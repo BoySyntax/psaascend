@@ -106,16 +106,21 @@ export default function AssessmentPage() {
     }
   }, [existing]);
 
-  const totalTrainingHours = useMemo(() => trainingRows.reduce((sum, r) => sum + (r.hours || 0), 0), [trainingRows]);
+  const totalTrainingHours = useMemo(
+    () => trainingRows.reduce((sum, r) => sum + (r.hours || 0), 0),
+    [trainingRows]
+  );
 
+  // ✅ FIXED: Properly convert total months into years (e.g. 12 months = 1 year, not "3.12")
   const totalExperienceDisplay = useMemo(() => {
-    const totalYears = experienceRows.reduce((sum, r) => sum + (r.years || 0), 0);
-    const totalMonths = experienceRows.reduce((sum, r) => sum + (r.months || 0), 0);
-    const carryYears = Math.floor(totalMonths / 12);
-    const remainingMonths = totalMonths % 12;
-    const finalYears = totalYears + carryYears;
-    if (finalYears === 0 && remainingMonths === 0) return "";
-    return remainingMonths > 0 ? `${finalYears}.${remainingMonths}` : `${finalYears}`;
+    const rawYears = experienceRows.reduce((sum, r) => sum + (r.years || 0), 0);
+    const rawMonths = experienceRows.reduce((sum, r) => sum + (r.months || 0), 0);
+    if (rawYears === 0 && rawMonths === 0) return "";
+    const extraYears = Math.floor(rawMonths / 12);
+    const remainingMonths = rawMonths % 12;
+    const totalYears = rawYears + extraYears;
+    if (remainingMonths === 0) return `${totalYears}`;
+    return `${totalYears} yr${totalYears !== 1 ? "s" : ""} ${remainingMonths} mo${remainingMonths !== 1 ? "s" : ""}`;
   }, [experienceRows]);
 
   const total = useMemo(() =>
@@ -153,7 +158,6 @@ export default function AssessmentPage() {
       ...(existing?.id ? { id: existing.id } : {}),
       applicant_id: id,
       ...form,
-      // Save multi-row data as JSON strings
       training_rows: JSON.stringify(trainingRows),
       training_name: trainingRows[0]?.name || "",
       training_hours: trainingRows[0]?.hours || 0,
@@ -199,35 +203,39 @@ export default function AssessmentPage() {
             <tbody>
               <tr>
                 <td className="border border-gray-300 px-2 py-1 w-1/2">
-                  <p className="text-[10px] text-muted-foreground">Name of Applicant: (Last, First and Middle Name)</p>
-                  <p className="font-bold text-sm mt-0.5 uppercase">{applicant?.name || "—"}</p>
-                </td>
-                <td className="border border-gray-300 px-2 py-1 w-1/2">
                   <p className="text-[10px] text-muted-foreground">Eligibility:</p>
                   <p className="font-bold mt-0.5 uppercase">{applicant?.eligibility || "—"}</p>
                 </td>
+                <td className="border border-gray-300 px-2 py-1 w-1/2">
+                  <p className="text-[10px] text-muted-foreground">Name of Applicant: (Last, First and Middle Name)</p>
+                  <p className="font-bold text-sm mt-0.5 uppercase">{applicant?.name || "—"}</p>
+                </td>
               </tr>
               <tr>
-                <td className="border border-gray-300 px-2 py-1">
-                  <p className="text-[10px] text-muted-foreground">Contact Number:</p>
-                  <p className="font-semibold mt-0.5">{applicant?.contact || "—"}</p>
-                </td>
                 <td className="border border-gray-300 px-2 py-1">
                   <p className="text-[10px] text-muted-foreground">Email Address:</p>
                   <p className="font-semibold mt-0.5">{applicant?.email || "—"}</p>
                 </td>
+                <td className="border border-gray-300 px-2 py-1">
+                  <p className="text-[10px] text-muted-foreground">Contact Number:</p>
+                  <p className="font-semibold mt-0.5">{applicant?.contact || "—"}</p>
+                </td>
               </tr>
               <tr>
-                <td className="border border-gray-300 px-2 py-1">
-                  <p className="text-[10px] text-muted-foreground">Previous Position:</p>
-                  <p className="font-semibold mt-0.5 uppercase">{applicant?.previous_position || "—"}</p>
-                </td>
                 <td className="border border-gray-300 px-2 py-1">
                   <p className="text-[10px] text-muted-foreground">Position Applied For:</p>
                   <p className="font-semibold mt-0.5 uppercase">{applicant?.position_applied || "—"}</p>
                 </td>
+                <td className="border border-gray-300 px-2 py-1">
+                  <p className="text-[10px] text-muted-foreground">Previous Position:</p>
+                  <p className="font-semibold mt-0.5 uppercase">{applicant?.previous_position || "—"}</p>
+                </td>
               </tr>
               <tr>
+                <td className="border border-gray-300 px-2 py-1">
+                  <p className="text-[10px] text-muted-foreground">Salary Grade:</p>
+                  <p className="font-semibold mt-0.5">{applicant?.salary_grade || "—"}</p>
+                </td>
                 <td className="border border-gray-300 px-2 py-1">
                   <p className="text-[10px] text-muted-foreground">Salary Grade:</p>
                   <Field
@@ -238,12 +246,12 @@ export default function AssessmentPage() {
                     placeholder="Enter salary grade"
                   />
                 </td>
-                <td className="border border-gray-300 px-2 py-1">
-                  <p className="text-[10px] text-muted-foreground">Salary Grade:</p>
-                  <p className="font-semibold mt-0.5">{applicant?.salary_grade || "—"}</p>
-                </td>
               </tr>
               <tr>
+                <td className="border border-gray-300 px-2 py-1">
+                  <p className="text-[10px] text-muted-foreground">Office/Service/Unit/Region:</p>
+                  <p className="font-semibold mt-0.5 uppercase">{applicant?.office || "—"}</p>
+                </td>
                 <td className="border border-gray-300 px-2 py-1">
                   <p className="text-[10px] text-muted-foreground">Office:</p>
                   <Field
@@ -254,18 +262,14 @@ export default function AssessmentPage() {
                     placeholder="Enter office/service/unit/region"
                   />
                 </td>
-                <td className="border border-gray-300 px-2 py-1">
-                  <p className="text-[10px] text-muted-foreground">Office/Service/Unit/Region:</p>
-                  <p className="font-semibold mt-0.5 uppercase">{applicant?.office || "—"}</p>
-                </td>
               </tr>
               <tr>
                 <td className="border border-gray-300 px-2 py-1">
                   <p className="text-[10px] text-muted-foreground">Division/Province:</p>
                   <Field
                     isSuperAdmin={isSuperAdmin}
-                    value={form.division_province}
-                    onChange={(e) => setForm((p) => ({ ...p, division_province: e.target.value }))}
+                    value={form.division_province_current}
+                    onChange={(e) => setForm((p) => ({ ...p, division_province_current: e.target.value }))}
                     className="mt-0.5 h-7 text-xs"
                     placeholder="Enter division/province"
                   />
@@ -274,8 +278,8 @@ export default function AssessmentPage() {
                   <p className="text-[10px] text-muted-foreground">Division/Province:</p>
                   <Field
                     isSuperAdmin={isSuperAdmin}
-                    value={form.division_province_current}
-                    onChange={(e) => setForm((p) => ({ ...p, division_province_current: e.target.value }))}
+                    value={form.division_province}
+                    onChange={(e) => setForm((p) => ({ ...p, division_province: e.target.value }))}
                     className="mt-0.5 h-7 text-xs"
                     placeholder="Enter division/province"
                   />
@@ -393,7 +397,6 @@ export default function AssessmentPage() {
                           </div>
                         </div>
                       ))}
-                      {/* Total hours + Add button */}
                       <div className="flex items-center gap-2 pt-1">
                         {isSuperAdmin && (
                           <button
@@ -484,7 +487,6 @@ export default function AssessmentPage() {
                           </div>
                         </div>
                       ))}
-                      {/* Total years + Add button */}
                       <div className="flex items-center gap-2 pt-1">
                         {isSuperAdmin && (
                           <button

@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Pencil, Trash2, FileText, ClipboardList, Users, CheckCircle, Clock, Upload, FolderOpen, ExternalLink, Loader2, ChevronLeft, X } from "lucide-react";
+import { Plus, Pencil, Trash2, FileText, ClipboardList, Users, CheckCircle, Clock, Upload, FolderOpen, ExternalLink, Loader2, ChevronLeft } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
@@ -141,12 +141,10 @@ function ApplicantForm({
     }
   };
 
-  // For new applicants all docs are required
   const allDocsProvided = isEditing || DOC_LABELS.every(({ key }) => docs[key] !== null);
 
   return (
     <div className="grid gap-4 max-h-[75vh] overflow-y-auto pr-1">
-      {/* ── Basic Info ── */}
       <div className="grid gap-2">
         <Label>Full Name (Last, First Middle) *</Label>
         <Input
@@ -178,8 +176,9 @@ function ApplicantForm({
               </p>
             )}
         </div>
+        {/* ✅ Renamed from "Previous Position" to "Position" */}
         <div className="grid gap-2">
-          <Label>Previous Position</Label>
+          <Label>Position</Label>
           <Input value={form.previous_position || ""} onChange={(e) => set("previous_position", e.target.value)} />
         </div>
       </div>
@@ -267,14 +266,8 @@ function DocumentsDialog({ applicant }: { applicant: Applicant }) {
   ];
 
   const hasAny = docs.some((d) => d.url);
-
-  // Determine if URL is an image
   const isImage = (url: string) => /\.(jpg|jpeg|png|gif|webp)$/i.test(url.split("?")[0]);
-
-  // Only phones (not tablets) fall back to new tab — tablets use Google Docs Viewer
   const isPhone = /iPhone|Android.*Mobile|Opera Mini|IEMobile/i.test(navigator.userAgent);
-
-  // Use Google Docs Viewer so PDFs render on tablets/iPads too
   const getViewerUrl = (url: string) =>
     isImage(url) ? url : `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
 
@@ -305,7 +298,6 @@ function DocumentsDialog({ applicant }: { applicant: Applicant }) {
           </DialogTitle>
         </DialogHeader>
 
-        {/* ── Document List ── */}
         {!preview && (
           !hasAny ? (
             <p className="text-sm text-muted-foreground text-center py-6">No documents uploaded yet.</p>
@@ -320,14 +312,12 @@ function DocumentsDialog({ applicant }: { applicant: Applicant }) {
                   {url ? (
                     <div className="flex items-center gap-1 shrink-0">
                       {isPhone ? (
-                        // On phones: open in new tab
                         <a href={url} target="_blank" rel="noopener noreferrer">
                           <Button variant="outline" size="sm" className="text-xs gap-1">
                             <ExternalLink className="h-3 w-3" /> Open
                           </Button>
                         </a>
                       ) : (
-                        // On PC, laptop, tablet: preview inline via Google Docs Viewer
                         <>
                           <Button
                             variant="outline"
@@ -354,15 +344,10 @@ function DocumentsDialog({ applicant }: { applicant: Applicant }) {
           )
         )}
 
-        {/* ── Inline Preview ── */}
         {preview && (
           <div className="mt-2 rounded-md border overflow-hidden bg-muted" style={{ height: "70vh" }}>
             {isImage(preview.url) ? (
-              <img
-                src={preview.url}
-                alt={preview.label}
-                className="w-full h-full object-contain"
-              />
+              <img src={preview.url} alt={preview.label} className="w-full h-full object-contain" />
             ) : (
               <iframe
                 src={getViewerUrl(preview.url)}
@@ -538,7 +523,8 @@ export default function ApplicantsPage() {
                     <TableHead>Name</TableHead>
                     <TableHead>Position Applied</TableHead>
                     <TableHead>SG</TableHead>
-                    <TableHead>Vacant Positions</TableHead>
+                    {/* ✅ Changed from "Vacant Positions" to "Position" */}
+                    <TableHead>Position</TableHead>
                     <TableHead>Office</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -550,7 +536,8 @@ export default function ApplicantsPage() {
                       <TableCell className="font-medium">{a.name}</TableCell>
                       <TableCell>{a.position_applied}</TableCell>
                       <TableCell>{a.salary_grade || "—"}</TableCell>
-                      <TableCell>{a.vacant_positions || "—"}</TableCell>
+                      {/* ✅ Changed from vacant_positions to previous_position */}
+                      <TableCell>{a.previous_position || "—"}</TableCell>
                       <TableCell>{a.office || "—"}</TableCell>
                       <TableCell>
                         <div className="flex gap-1">
