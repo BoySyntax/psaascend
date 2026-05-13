@@ -42,19 +42,16 @@ function useRankings() {
         .select("id, name, position_applied, salary_grade, office, eligibility, vacant_positions");
       if (e1) throw e1;
 
-      // Fetch ALL assessments across all raters
       const { data: assessments, error: e2 } = await supabase
         .from("assessments")
         .select("applicant_id, education_pts, training_pts, experience_pts, eligibility_pts, user_id");
       if (e2) throw e2;
 
-      // Fetch ALL interviews across all raters
       const { data: interviews, error: e3 } = await supabase
         .from("interviews")
         .select("applicant_id, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, user_id");
       if (e3) throw e3;
 
-      // Group assessments by applicant_id and average
       const assessGroups = new Map<string, typeof assessments>();
       for (const a of assessments ?? []) {
         if (!assessGroups.has(a.applicant_id)) assessGroups.set(a.applicant_id, []);
@@ -76,7 +73,6 @@ function useRankings() {
         });
       }
 
-      // Group interviews by applicant_id and average
       const interGroups = new Map<string, typeof interviews>();
       for (const i of interviews ?? []) {
         if (!interGroups.has(i.applicant_id)) interGroups.set(i.applicant_id, []);
@@ -122,7 +118,6 @@ function useRankings() {
         ].map((v) => v ?? 0);
         const p2 = c.reduce((s, v) => s + v, 0);
 
-        // Round to 2 decimal places for display
         const round = (n: number) => Math.round(n * 100) / 100;
 
         return {
@@ -246,6 +241,24 @@ function ReadOnlyField({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+const SIGNATORIES = [
+  {
+    title: "Prepared by:",
+    name: "NEIL LESTER A. GIMENO",
+    lines: ["Administrative Officer IV"],
+  },
+  {
+    title: "Reviewed by:",
+    name: "JOSE B. TUASON JR., CPA, MBM",
+    lines: ["Chief Administrative Officer"],
+  },
+  {
+    title: "Evaluated/Deliberated by ROHRMPSB 10:",
+    name: "JANITH C. AVES, CE, DM",
+    lines: ["Chairperson, ROHRMPSB 10", "Regional Director"],
+  },
+];
 
 export default function RankingsPage() {
   const { data: rankings, isLoading, error } = useRankings();
@@ -515,17 +528,15 @@ export default function RankingsPage() {
         {!isLoading && positionOptions.length > 0 && (
           <>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "16px", marginTop: "24px", fontSize: "12px" }}>
-              {[
-                { title: "Prepared by:", sub: "Designation" },
-                { title: "Reviewed by:", sub: "Designation" },
-                { title: "Evaluated/Deliberated by the PSA A.S.C.E.N.D:", sub: "Chairperson" },
-              ].map(({ title, sub }) => (
+              {SIGNATORIES.map(({ title, name, lines }) => (
                 <div key={title} style={{ border: "1px solid #9ca3af", padding: "10px" }}>
                   <div style={{ fontWeight: 600, marginBottom: "24px" }}>{title}</div>
                   <div style={{ height: "48px" }} />
-                  <div style={{ borderBottom: "1px dashed #9ca3af", marginBottom: "4px" }} />
-                  <div style={{ textAlign: "center", fontWeight: 500 }}>Name &amp; Signature</div>
-                  <div style={{ textAlign: "center", color: "#6b7280" }}>{sub}</div>
+                  <div style={{ borderBottom: "1px dashed #9ca3af", marginBottom: "6px" }} />
+                  <div style={{ textAlign: "center", fontWeight: 700, fontSize: "12px" }}>{name}</div>
+                  {lines.map((line, i) => (
+                    <div key={i} style={{ textAlign: "center", color: "#6b7280", fontSize: "11px" }}>{line}</div>
+                  ))}
                 </div>
               ))}
             </div>
