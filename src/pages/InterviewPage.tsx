@@ -82,7 +82,7 @@ export default function InterviewPage() {
 
       <Card className="print-full-width overflow-hidden">
         <CardHeader className="text-center border-b pb-3">
-          <p className="text-xs text-muted-foreground">PSA A.S.C.E.N.D Form 4</p>
+          <p className="text-xs text-muted-foreground">PSA-HRMPSB Form 4</p>
           <CardTitle className="text-lg">Competency Based Interview Form</CardTitle>
         </CardHeader>
 

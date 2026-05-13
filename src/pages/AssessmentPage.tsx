@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Printer, Save, Plus, Trash2 } from "lucide-react";
 
-// ✅ Moved OUTSIDE the page component to prevent focus loss on every keystroke
 function Field({
   value,
   onChange,
@@ -90,14 +89,12 @@ export default function AssessmentPage() {
         eligibility_pts: Number(existing.eligibility_pts) || 0,
       });
 
-      // Load multi-row training data (stored as JSON string) or fallback to legacy single row
       if (existing.training_rows) {
         try { setTrainingRows(JSON.parse(existing.training_rows)); } catch { }
       } else if (existing.training_name) {
         setTrainingRows([{ name: existing.training_name, hours: Number(existing.training_hours) || 0 }]);
       }
 
-      // Load multi-row experience data or fallback to legacy single row
       if (existing.experience_rows) {
         try { setExperienceRows(JSON.parse(existing.experience_rows)); } catch { }
       } else if (existing.experience_name) {
@@ -111,7 +108,6 @@ export default function AssessmentPage() {
     [trainingRows]
   );
 
-  // ✅ FIXED: Properly convert total months into years (e.g. 12 months = 1 year, not "3.12")
   const totalExperienceDisplay = useMemo(() => {
     const rawYears = experienceRows.reduce((sum, r) => sum + (r.years || 0), 0);
     const rawMonths = experienceRows.reduce((sum, r) => sum + (r.months || 0), 0);
@@ -138,14 +134,12 @@ export default function AssessmentPage() {
     }
   };
 
-  // Training row helpers
   const updateTrainingRow = (index: number, field: keyof TrainingRow, value: string | number) => {
     setTrainingRows((rows) => rows.map((r, i) => i === index ? { ...r, [field]: value } : r));
   };
   const addTrainingRow = () => setTrainingRows((rows) => [...rows, { name: "", hours: 0 }]);
   const removeTrainingRow = (index: number) => setTrainingRows((rows) => rows.filter((_, i) => i !== index));
 
-  // Experience row helpers
   const updateExperienceRow = (index: number, field: keyof ExperienceRow, value: string | number) => {
     setExperienceRows((rows) => rows.map((r, i) => i === index ? { ...r, [field]: value } : r));
   };
@@ -193,7 +187,7 @@ export default function AssessmentPage() {
 
       <Card className="print-full-width overflow-hidden">
         <CardHeader className="text-center border-b pb-3">
-          <p className="text-xs text-muted-foreground">PSA A.S.C.E.N.D Form 3</p>
+          <p className="text-xs text-muted-foreground">PSA-HRMPSB Form 3</p>
           <CardTitle className="text-lg">Individual Assessment Form</CardTitle>
         </CardHeader>
 
@@ -201,41 +195,41 @@ export default function AssessmentPage() {
 
           <table className="w-full text-xs border-collapse border-b border-gray-300">
             <tbody>
+              {/* ROW 1: Name of Applicant (left) | Eligibility (right) */}
               <tr>
-                <td className="border border-gray-300 px-2 py-1 w-1/2">
-                  <p className="text-[10px] text-muted-foreground">Eligibility:</p>
-                  <p className="font-bold mt-0.5 uppercase">{applicant?.eligibility || "—"}</p>
-                </td>
                 <td className="border border-gray-300 px-2 py-1 w-1/2">
                   <p className="text-[10px] text-muted-foreground">Name of Applicant: (Last, First and Middle Name)</p>
                   <p className="font-bold text-sm mt-0.5 uppercase">{applicant?.name || "—"}</p>
                 </td>
-              </tr>
-              <tr>
-                <td className="border border-gray-300 px-2 py-1">
-                  <p className="text-[10px] text-muted-foreground">Email Address:</p>
-                  <p className="font-semibold mt-0.5">{applicant?.email || "—"}</p>
+                <td className="border border-gray-300 px-2 py-1 w-1/2">
+                  <p className="text-[10px] text-muted-foreground">Eligibility:</p>
+                  <p className="font-bold mt-0.5 uppercase">{applicant?.eligibility || "—"}</p>
                 </td>
+              </tr>
+              {/* ROW 2: Contact Number (left) | Email Address (right) */}
+              <tr>
                 <td className="border border-gray-300 px-2 py-1">
                   <p className="text-[10px] text-muted-foreground">Contact Number:</p>
                   <p className="font-semibold mt-0.5">{applicant?.contact || "—"}</p>
                 </td>
-              </tr>
-              <tr>
                 <td className="border border-gray-300 px-2 py-1">
-                  <p className="text-[10px] text-muted-foreground">Position Applied For:</p>
-                  <p className="font-semibold mt-0.5 uppercase">{applicant?.position_applied || "—"}</p>
+                  <p className="text-[10px] text-muted-foreground">Email Address:</p>
+                  <p className="font-semibold mt-0.5">{applicant?.email || "—"}</p>
                 </td>
+              </tr>
+              {/* ROW 3: Previous Position (left) | Position Applied For (right) */}
+              <tr>
                 <td className="border border-gray-300 px-2 py-1">
                   <p className="text-[10px] text-muted-foreground">Previous Position:</p>
                   <p className="font-semibold mt-0.5 uppercase">{applicant?.previous_position || "—"}</p>
                 </td>
-              </tr>
-              <tr>
                 <td className="border border-gray-300 px-2 py-1">
-                  <p className="text-[10px] text-muted-foreground">Salary Grade:</p>
-                  <p className="font-semibold mt-0.5">{applicant?.salary_grade || "—"}</p>
+                  <p className="text-[10px] text-muted-foreground">Position Applied For:</p>
+                  <p className="font-semibold mt-0.5 uppercase">{applicant?.position_applied || "—"}</p>
                 </td>
+              </tr>
+              {/* ROW 4: Salary Grade input (left) | Salary Grade static (right) */}
+              <tr>
                 <td className="border border-gray-300 px-2 py-1">
                   <p className="text-[10px] text-muted-foreground">Salary Grade:</p>
                   <Field
@@ -246,12 +240,13 @@ export default function AssessmentPage() {
                     placeholder="Enter salary grade"
                   />
                 </td>
-              </tr>
-              <tr>
                 <td className="border border-gray-300 px-2 py-1">
-                  <p className="text-[10px] text-muted-foreground">Office/Service/Unit/Region:</p>
-                  <p className="font-semibold mt-0.5 uppercase">{applicant?.office || "—"}</p>
+                  <p className="text-[10px] text-muted-foreground">Salary Grade:</p>
+                  <p className="font-semibold mt-0.5">{applicant?.salary_grade || "—"}</p>
                 </td>
+              </tr>
+              {/* ROW 5: Office input (left) | Office/Service/Unit/Region static (right) */}
+              <tr>
                 <td className="border border-gray-300 px-2 py-1">
                   <p className="text-[10px] text-muted-foreground">Office:</p>
                   <Field
@@ -262,14 +257,19 @@ export default function AssessmentPage() {
                     placeholder="Enter office/service/unit/region"
                   />
                 </td>
+                <td className="border border-gray-300 px-2 py-1">
+                  <p className="text-[10px] text-muted-foreground">Office/Service/Unit/Region:</p>
+                  <p className="font-semibold mt-0.5 uppercase">{applicant?.office || "—"}</p>
+                </td>
               </tr>
+              {/* ROW 6: Division/Province input (left) | Division/Province current (right) */}
               <tr>
                 <td className="border border-gray-300 px-2 py-1">
                   <p className="text-[10px] text-muted-foreground">Division/Province:</p>
                   <Field
                     isSuperAdmin={isSuperAdmin}
-                    value={form.division_province_current}
-                    onChange={(e) => setForm((p) => ({ ...p, division_province_current: e.target.value }))}
+                    value={form.division_province}
+                    onChange={(e) => setForm((p) => ({ ...p, division_province: e.target.value }))}
                     className="mt-0.5 h-7 text-xs"
                     placeholder="Enter division/province"
                   />
@@ -278,8 +278,8 @@ export default function AssessmentPage() {
                   <p className="text-[10px] text-muted-foreground">Division/Province:</p>
                   <Field
                     isSuperAdmin={isSuperAdmin}
-                    value={form.division_province}
-                    onChange={(e) => setForm((p) => ({ ...p, division_province: e.target.value }))}
+                    value={form.division_province_current}
+                    onChange={(e) => setForm((p) => ({ ...p, division_province_current: e.target.value }))}
                     className="mt-0.5 h-7 text-xs"
                     placeholder="Enter division/province"
                   />
