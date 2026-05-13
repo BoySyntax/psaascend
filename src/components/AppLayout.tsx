@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 const navItems = [
   { path: "/applicants", label: "Applicants", icon: Users },
-  { path: "/rankings", label: "Rankings", icon: Trophy },
+  { path: "/rankings", label: "Form 6", icon: Trophy },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {

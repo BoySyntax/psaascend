@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Printer, Save } from "lucide-react";
+import { ArrowLeft, Printer, Save, Plus, Trash2 } from "lucide-react";
 
 // ✅ Moved OUTSIDE the page component to prevent focus loss on every keystroke
 function Field({
@@ -50,6 +50,9 @@ function Field({
   );
 }
 
+type TrainingRow = { name: string; hours: number };
+type ExperienceRow = { name: string; years: number; months: number };
+
 export default function AssessmentPage() {
   const { id } = useParams<{ id: string }>();
   const { isSuperAdmin } = useAuth();
@@ -64,10 +67,13 @@ export default function AssessmentPage() {
     division_province_current: "",
     salary_grade_input: "",
     education_degree: "", education_course: "", education_pts: 0,
-    training_name: "", training_hours: 0, training_pts: 0,
-    experience_name: "", experience_duration: "", experience_years: 0, experience_pts: 0,
+    training_pts: 0,
+    experience_pts: 0,
     eligibility_pts: 0,
   });
+
+  const [trainingRows, setTrainingRows] = useState<TrainingRow[]>([{ name: "", hours: 0 }]);
+  const [experienceRows, setExperienceRows] = useState<ExperienceRow[]>([{ name: "", years: 0, months: 0 }]);
 
   useEffect(() => {
     if (existing) {
@@ -79,17 +85,38 @@ export default function AssessmentPage() {
         education_degree: existing.education_degree || "",
         education_course: existing.education_course || "",
         education_pts: Number(existing.education_pts) || 0,
-        training_name: existing.training_name || "",
-        training_hours: Number(existing.training_hours) || 0,
         training_pts: Number(existing.training_pts) || 0,
-        experience_name: existing.experience_name || "",
-        experience_duration: existing.experience_duration || "",
-        experience_years: Number(existing.experience_years) || 0,
         experience_pts: Number(existing.experience_pts) || 0,
         eligibility_pts: Number(existing.eligibility_pts) || 0,
       });
+
+      // Load multi-row training data (stored as JSON string) or fallback to legacy single row
+      if (existing.training_rows) {
+        try { setTrainingRows(JSON.parse(existing.training_rows)); } catch { }
+      } else if (existing.training_name) {
+        setTrainingRows([{ name: existing.training_name, hours: Number(existing.training_hours) || 0 }]);
+      }
+
+      // Load multi-row experience data or fallback to legacy single row
+      if (existing.experience_rows) {
+        try { setExperienceRows(JSON.parse(existing.experience_rows)); } catch { }
+      } else if (existing.experience_name) {
+        setExperienceRows([{ name: existing.experience_name, years: Number(existing.experience_years) || 0, months: 0 }]);
+      }
     }
   }, [existing]);
+
+  const totalTrainingHours = useMemo(() => trainingRows.reduce((sum, r) => sum + (r.hours || 0), 0), [trainingRows]);
+
+  const totalExperienceDisplay = useMemo(() => {
+    const totalYears = experienceRows.reduce((sum, r) => sum + (r.years || 0), 0);
+    const totalMonths = experienceRows.reduce((sum, r) => sum + (r.months || 0), 0);
+    const carryYears = Math.floor(totalMonths / 12);
+    const remainingMonths = totalMonths % 12;
+    const finalYears = totalYears + carryYears;
+    if (finalYears === 0 && remainingMonths === 0) return "";
+    return remainingMonths > 0 ? `${finalYears}.${remainingMonths}` : `${finalYears}`;
+  }, [experienceRows]);
 
   const total = useMemo(() =>
     Math.min(form.education_pts, 20) + Math.min(form.training_pts, 15) +
@@ -106,12 +133,34 @@ export default function AssessmentPage() {
     }
   };
 
+  // Training row helpers
+  const updateTrainingRow = (index: number, field: keyof TrainingRow, value: string | number) => {
+    setTrainingRows((rows) => rows.map((r, i) => i === index ? { ...r, [field]: value } : r));
+  };
+  const addTrainingRow = () => setTrainingRows((rows) => [...rows, { name: "", hours: 0 }]);
+  const removeTrainingRow = (index: number) => setTrainingRows((rows) => rows.filter((_, i) => i !== index));
+
+  // Experience row helpers
+  const updateExperienceRow = (index: number, field: keyof ExperienceRow, value: string | number) => {
+    setExperienceRows((rows) => rows.map((r, i) => i === index ? { ...r, [field]: value } : r));
+  };
+  const addExperienceRow = () => setExperienceRows((rows) => [...rows, { name: "", years: 0, months: 0 }]);
+  const removeExperienceRow = (index: number) => setExperienceRows((rows) => rows.filter((_, i) => i !== index));
+
   const handleSave = () => {
     if (!id) return;
     saveMut.mutate({
       ...(existing?.id ? { id: existing.id } : {}),
       applicant_id: id,
       ...form,
+      // Save multi-row data as JSON strings
+      training_rows: JSON.stringify(trainingRows),
+      training_name: trainingRows[0]?.name || "",
+      training_hours: trainingRows[0]?.hours || 0,
+      experience_rows: JSON.stringify(experienceRows),
+      experience_name: experienceRows[0]?.name || "",
+      experience_duration: experienceRows[0] ? `${experienceRows[0].years} years and ${experienceRows[0].months} months` : "",
+      experience_years: experienceRows[0]?.years || 0,
       evaluated_by: existing?.evaluated_by || null,
       reviewed_by: existing?.reviewed_by || null,
       attested_by: existing?.attested_by || null,
@@ -304,28 +353,59 @@ export default function AssessmentPage() {
                       <span className="font-semibold shrink-0">II.&nbsp;&nbsp;Relevant Training</span>
                       <div className="flex-1 border-b border-dashed border-gray-400"></div>
                     </div>
-                    <div className="mt-2 space-y-2 pl-6">
-                      <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground shrink-0 w-32">Training/Seminar</span>
-                        <Field
-                          isSuperAdmin={isSuperAdmin}
-                          value={form.training_name}
-                          onChange={(e) => setForm((p) => ({ ...p, training_name: e.target.value }))}
-                          className="h-5 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold"
-                          placeholder="e.g. Clinical Legal Education..."
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground shrink-0 w-32">No. of hours</span>
-                        <Field
-                          isSuperAdmin={isSuperAdmin}
-                          type="number" min={0}
-                          value={form.training_hours === 0 ? "" : form.training_hours}
-                          onChange={(e) => setForm((p) => ({ ...p, training_hours: Number(e.target.value) || 0 }))}
-                          className="h-5 w-20 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        />
-                        <span className="text-muted-foreground ml-2 shrink-0">Total no. of hours:</span>
-                        <span className="font-semibold underline ml-1">{form.training_hours === 0 ? "" : form.training_hours}</span>
+                    <div className="mt-2 pl-6 space-y-2">
+                      {trainingRows.map((row, i) => (
+                        <div key={i} className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground shrink-0 w-32">Training/Seminar</span>
+                            {isSuperAdmin ? (
+                              <Input
+                                value={row.name}
+                                onChange={(e) => updateTrainingRow(i, "name", e.target.value)}
+                                className="h-5 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold"
+                                placeholder="e.g. Clinical Legal Education..."
+                              />
+                            ) : (
+                              <span className="font-semibold">{row.name || "—"}</span>
+                            )}
+                            {isSuperAdmin && trainingRows.length > 1 && (
+                              <button
+                                onClick={() => removeTrainingRow(i)}
+                                className="text-destructive hover:text-destructive/80 shrink-0 ml-1"
+                                title="Remove row"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground shrink-0 w-32">No. of hours</span>
+                            {isSuperAdmin ? (
+                              <Input
+                                type="number" min={0}
+                                value={row.hours === 0 ? "" : row.hours}
+                                onChange={(e) => updateTrainingRow(i, "hours", Number(e.target.value) || 0)}
+                                className="h-5 w-20 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              />
+                            ) : (
+                              <span className="font-semibold">{row.hours || "—"}</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      {/* Total hours + Add button */}
+                      <div className="flex items-center gap-2 pt-1">
+                        {isSuperAdmin && (
+                          <button
+                            onClick={addTrainingRow}
+                            className="flex items-center gap-1 text-primary hover:text-primary/80 text-xs font-medium"
+                            title="Add training row"
+                          >
+                            <Plus className="h-3 w-3" /> Add Row
+                          </button>
+                        )}
+                        <span className="text-muted-foreground ml-auto shrink-0">Total no. of hours:</span>
+                        <span className="font-semibold underline ml-1">{totalTrainingHours || ""}</span>
                       </div>
                     </div>
                   </td>
@@ -348,34 +428,75 @@ export default function AssessmentPage() {
                       <span className="font-semibold shrink-0">III.&nbsp;&nbsp;Relevant Work Experience</span>
                       <div className="flex-1 border-b border-dashed border-gray-400"></div>
                     </div>
-                    <div className="mt-2 space-y-2 pl-6">
-                      <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground shrink-0 w-32">Work Experience</span>
-                        <Field
-                          isSuperAdmin={isSuperAdmin}
-                          value={form.experience_name}
-                          onChange={(e) => setForm((p) => ({ ...p, experience_name: e.target.value }))}
-                          className="h-5 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold"
-                          placeholder="e.g. Compliance Officer"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground shrink-0 w-32">No. of years</span>
-                        <Field
-                          isSuperAdmin={isSuperAdmin}
-                          value={form.experience_duration}
-                          onChange={(e) => setForm((p) => ({ ...p, experience_duration: e.target.value }))}
-                          className="h-5 w-36 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold"
-                          placeholder="e.g. 4 years and 6 months"
-                        />
-                        <span className="text-muted-foreground ml-2 shrink-0">Total no. of years:</span>
-                        <Field
-                          isSuperAdmin={isSuperAdmin}
-                          type="number" min={0}
-                          value={form.experience_years === 0 ? "" : form.experience_years}
-                          onChange={(e) => setForm((p) => ({ ...p, experience_years: Number(e.target.value) || 0 }))}
-                          className="h-5 w-14 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold ml-1 [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        />
+                    <div className="mt-2 pl-6 space-y-2">
+                      {experienceRows.map((row, i) => (
+                        <div key={i} className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground shrink-0 w-32">Work Experience</span>
+                            {isSuperAdmin ? (
+                              <Input
+                                value={row.name}
+                                onChange={(e) => updateExperienceRow(i, "name", e.target.value)}
+                                className="h-5 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold"
+                                placeholder="e.g. Compliance Officer"
+                              />
+                            ) : (
+                              <span className="font-semibold">{row.name || "—"}</span>
+                            )}
+                            {isSuperAdmin && experienceRows.length > 1 && (
+                              <button
+                                onClick={() => removeExperienceRow(i)}
+                                className="text-destructive hover:text-destructive/80 shrink-0 ml-1"
+                                title="Remove row"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground shrink-0 w-32">No. of years</span>
+                            {isSuperAdmin ? (
+                              <>
+                                <Input
+                                  type="number" min={0}
+                                  value={row.years === 0 ? "" : row.years}
+                                  onChange={(e) => updateExperienceRow(i, "years", Number(e.target.value) || 0)}
+                                  className="h-5 w-12 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                  placeholder="yrs"
+                                />
+                                <span className="text-muted-foreground shrink-0 text-[10px]">yrs</span>
+                                <Input
+                                  type="number" min={0} max={11}
+                                  value={row.months === 0 ? "" : row.months}
+                                  onChange={(e) => updateExperienceRow(i, "months", Math.min(11, Number(e.target.value) || 0))}
+                                  className="h-5 w-12 text-xs border-0 border-b rounded-none px-0 bg-transparent focus-visible:ring-0 font-semibold [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                  placeholder="mos"
+                                />
+                                <span className="text-muted-foreground shrink-0 text-[10px]">mos</span>
+                              </>
+                            ) : (
+                              <span className="font-semibold">
+                                {row.years > 0 || row.months > 0
+                                  ? `${row.years} year${row.years !== 1 ? "s" : ""}${row.months > 0 ? ` and ${row.months} month${row.months !== 1 ? "s" : ""}` : ""}`
+                                  : "—"}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      {/* Total years + Add button */}
+                      <div className="flex items-center gap-2 pt-1">
+                        {isSuperAdmin && (
+                          <button
+                            onClick={addExperienceRow}
+                            className="flex items-center gap-1 text-primary hover:text-primary/80 text-xs font-medium"
+                            title="Add experience row"
+                          >
+                            <Plus className="h-3 w-3" /> Add Row
+                          </button>
+                        )}
+                        <span className="text-muted-foreground ml-auto shrink-0">Total no. of years:</span>
+                        <span className="font-semibold underline ml-1">{totalExperienceDisplay}</span>
                       </div>
                     </div>
                   </td>
