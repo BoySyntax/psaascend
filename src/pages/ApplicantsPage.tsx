@@ -524,7 +524,7 @@ export default function ApplicantsPage() {
                     <TableHead>Position Applied</TableHead>
                     <TableHead>SG</TableHead>
                     {/* ✅ Changed from "Vacant Positions" to "Position" */}
-                    <TableHead>Position</TableHead>
+                    <TableHead>Present Position</TableHead>
                     <TableHead>Office</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
