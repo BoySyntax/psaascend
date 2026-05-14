@@ -6,9 +6,9 @@ export const COMPETENCIES = [
   { key: "c5", label: "Planning Organizing and Delivery", group: "B. Leadership Competencies" },
   { key: "c6", label: "Strategic and Creative Thinking", group: "B. Leadership Competencies" },
   { key: "c7", label: "Policy Interpretation and Implementation", group: "B. Leadership Competencies" },
-  { key: "c8", label: "Transaction Processing", group: "C. Technical Competencies" },
-  { key: "c9", label: "Accounts Reconciliation", group: "C. Technical Competencies" },
-  { key: "c10", label: "Preparation and Interpretation of Financial Statements", group: "C. Technical Competencies" },
+  { key: "c8", label: "Communication Skills", group: "C. Technical Competencies" },
+  { key: "c9", label: "Application of Technical Knowledge and Skills", group: "C. Technical Competencies" },
+  { key: "c10", label: "Generating Reports and Documentation", group: "C. Technical Competencies" },
 ] as const;
 
 export const RATING_LABELS: Record<number, string> = {
