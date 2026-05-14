@@ -17,9 +17,8 @@ export type Applicant = {
   vacant_positions?: string;
   created_at: string;
   has_assessment?: boolean;
-  has_interview?: boolean;         // current user submitted Form 4
-  interview_count?: number;        // how many accounts submitted Form 4
-  // Document URLs stored in Supabase Storage
+  has_interview?: boolean;
+  interview_count?: number;
   doc_application_letter?: string | null;
   doc_pds?: string | null;
   doc_wes?: string | null;
@@ -27,11 +26,9 @@ export type Applicant = {
   doc_tor?: string | null;
 };
 
-const TOTAL_INTERVIEW_ACCOUNTS = 4; // total non-superadmin accounts
+const TOTAL_INTERVIEW_ACCOUNTS = 5; // total non-superadmin accounts
 export { TOTAL_INTERVIEW_ACCOUNTS };
 
-// ─── Upload helper ────────────────────────────────────────────────────────────
-// Uploads a file to Supabase Storage bucket "applicant-docs" and returns the public URL.
 export async function uploadApplicantDoc(
   applicantName: string,
   docType: string,
@@ -51,13 +48,10 @@ export async function uploadApplicantDoc(
   return data.publicUrl;
 }
 
-// ─── Queries & Mutations ──────────────────────────────────────────────────────
-
 export function useApplicants() {
   const { user } = useAuth();
   const qc = useQueryClient();
 
-  // Real-time subscriptions — auto-refresh when DB changes
   useEffect(() => {
     if (!user?.id) return;
     const channel = supabase
@@ -84,17 +78,14 @@ export function useApplicants() {
         .order("created_at", { ascending: false });
       if (error) throw error;
 
-      // Check assessments across ALL users (superadmin fills Form 3 for everyone)
       const { data: assessments } = await supabase
         .from("assessments")
         .select("applicant_id");
 
-      // Fetch ALL interviews across all users to count per applicant
       const { data: allInterviews } = await supabase
         .from("interviews")
         .select("applicant_id, user_id");
 
-      // Check if current user has submitted Form 4
       const { data: myInterviews } = await supabase
         .from("interviews")
         .select("applicant_id")
@@ -103,7 +94,6 @@ export function useApplicants() {
       const assessmentSet = new Set(assessments?.map((a) => a.applicant_id));
       const myInterviewSet = new Set(myInterviews?.map((i) => i.applicant_id));
 
-      // Count distinct users who submitted Form 4 per applicant
       const interviewCountMap = new Map<string, number>();
       for (const interview of allInterviews || []) {
         const prev = interviewCountMap.get(interview.applicant_id) || 0;

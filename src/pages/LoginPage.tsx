@@ -11,29 +11,64 @@ import { useAuth } from "@/contexts/AuthContext";
 import background from "@/assets/backless.jpg";
 import phLogo from "@/assets/PH.png";
 import psaLogo from "@/assets/PSA.png";
+import ascendLogo from "@/assets/ascend.png";
 
 const PRIVACY_NOTICE = [
   {
     title: "Collection of Personal Data",
-    body: "The PSA collects personal information provided by users who register, log in, or submit applications through the PSA HRIS Career Portal. These may include:",
+    body: "The PSA collects personal information voluntarily provided by users who register, access, and submit applications through PSA A.S.C.E.N.D. The personal data collected may include, but are not limited to, the following:",
     items: [
       "Full name and other personal identification details",
       "Contact information such as email address and mobile number",
       "Educational background and professional qualifications",
-      "Employment history and supporting documents",
-      "Login credentials and system-generated information such as activity logs",
+      "Employment history, eligibility, training, and supporting documents",
+      "Login credentials and system-generated information such as access logs and activity records",
     ],
   },
   {
     title: "Purpose of Processing",
-    body: "The personal data collected through the PSA HRIS Career Portal shall be processed for the following purposes:",
+    body: "The personal data collected through PSA A.S.C.E.N.D. shall be processed for legitimate and lawful purposes, including:",
     items: [
       "User registration and authentication",
       "Processing and evaluation of applications for vacant positions in the PSA",
-      "Verification of submitted credentials and qualifications",
-      "Facilitation of recruitment, selection, and placement processes",
-      "Communication regarding application status and recruitment updates",
-      "Generation of records and reports related to recruitment and personnel administration",
+      "Verification and validation of submitted credentials and qualifications",
+      "Facilitation of recruitment, selection, appointment, and placement processes",
+      "Communication regarding application status, schedules, and recruitment updates",
+      "Generation of records, reports, and personnel-related documentation",
+      "Maintenance, monitoring, and improvement of the system and related services",
+    ],
+  },
+  {
+    title: "Data Protection and Security",
+    body: "The PSA implements appropriate organizational, physical, and technical security measures to safeguard personal data against unauthorized access, disclosure, alteration, misuse, loss, or destruction. Access to personal information is limited only to authorized personnel who require such information in the performance of their official duties.",
+    items: [],
+  },
+  {
+    title: "Data Sharing and Disclosure",
+    body: "Personal data collected through PSA A.S.C.E.N.D. shall not be disclosed or shared with third parties except when authorized by law, required by competent authorities, or with the consent of the data subject.",
+    items: [],
+  },
+  {
+    title: "Retention of Information",
+    body: "Personal data shall be retained only for as long as necessary to fulfill the declared purposes and in accordance with applicable laws, rules, regulations, and records retention policies of the PSA.",
+    items: [],
+  },
+  {
+    title: "Rights of the Data Subject",
+    body: "Pursuant to the Data Privacy Act of 2012, data subjects have the right to:",
+    items: [
+      "Be informed regarding the processing of their personal data",
+      "Access and request a copy of their personal data",
+      "Correct or update inaccurate or incomplete information",
+      "Object to or withdraw consent for processing, subject to applicable limitations",
+      "Request the suspension, withdrawal, or deletion of personal data when applicable",
+    ],
+  },
+  {
+    title: "Contact Information",
+    body: "For inquiries, concerns, or requests regarding personal data and privacy matters, you may contact:",
+    items: [
+      "Data Protection Officer, Philippine Statistics Authority",
     ],
   },
 ];
@@ -87,10 +122,10 @@ const LoginPage = () => {
           <div className="flex items-center gap-4">
             <img src={psaLogo} alt="PSA Logo" className="h-20 w-20 object-contain" />
             <img src={phLogo} alt="Philippine Government Logo" className="h-20 w-20 object-contain" />
+            
           </div>
           <div>
             <CardTitle className="text-2xl font-bold">PSA A.S.C.E.N.D</CardTitle>
-            {/* ── ASCEND Acronym ── */}
             <div className="mt-3 rounded-md bg-primary/5 border border-primary/20 px-3 py-2.5">
               <div className="flex flex-wrap gap-x-1 gap-y-0.5 items-baseline">
                 {[
@@ -138,7 +173,6 @@ const LoginPage = () => {
               />
             </div>
 
-            {/* ── Privacy Notice Checkbox ── */}
             <div className="flex items-start gap-2 pt-1">
               <input
                 id="privacy"
@@ -180,11 +214,14 @@ const LoginPage = () => {
           </DialogHeader>
 
           <div className="space-y-1 pb-1">
-            <p className="text-sm font-semibold text-muted-foreground">PSA HRIS Career Portal</p>
-            <p className="text-sm">
+            <p className="text-sm font-semibold text-muted-foreground">PSA A.S.C.E.N.D.</p>
+            <p className="text-sm font-medium text-muted-foreground">
+              Administrative and Support Services Centralized Enterprise Network and Digitalization
+            </p>
+            <p className="text-sm mt-2">
               The <strong>Philippine Statistics Authority (PSA)</strong> respects and values your privacy
-              and is committed to protecting your personal data in accordance with the Data Privacy Act
-              of 2012 and other relevant issuances of the National Privacy Commission.
+              and is committed to protecting your personal data in accordance with the provisions of
+              Data Privacy Act of 2012 and the issuances of the National Privacy Commission.
             </p>
           </div>
 
@@ -194,11 +231,13 @@ const LoginPage = () => {
             <div key={section.title} className="space-y-2">
               <h3 className="font-semibold text-sm">{section.title}</h3>
               <p className="text-sm">{section.body}</p>
-              <ul className="list-disc pl-5 space-y-1">
-                {section.items.map((item) => (
-                  <li key={item} className="text-sm">{item}</li>
-                ))}
-              </ul>
+              {section.items.length > 0 && (
+                <ul className="list-disc pl-5 space-y-1">
+                  {section.items.map((item) => (
+                    <li key={item} className="text-sm">{item}</li>
+                  ))}
+                </ul>
+              )}
               <hr className="my-2" />
             </div>
           ))}

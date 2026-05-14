@@ -1,8 +1,9 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Users, FileText, ClipboardList, Trophy, LogOut } from "lucide-react";
+import { Users, Trophy, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import ascendLogo from "@/assets/ascend.png";
 
 const navItems = [
   { path: "/applicants", label: "Applicants", icon: Users },
@@ -33,9 +34,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <Link to="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary-foreground rounded-full flex items-center justify-center">
-                <span className="text-primary font-bold text-sm">PSA</span>
-              </div>
+              <img
+                src={ascendLogo}
+                alt="PSA A.S.C.E.N.D Logo"
+                className="h-16 w-16 object-contain rounded-full"
+              />
               <div>
                 <h1 className="text-primary-foreground font-bold text-lg leading-tight">
                   PSA A.S.C.E.N.D

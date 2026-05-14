@@ -25,9 +25,10 @@ type DocFiles = {
   wes: File | null;
   diploma: File | null;
   tor: File | null;
+  ipcr: File | null;
 };
 
-type FormData = Omit<Applicant, "id" | "created_at" | "has_assessment" | "has_interview" | "interview_count" | "doc_application_letter" | "doc_pds" | "doc_wes" | "doc_diploma" | "doc_tor">;
+type FormData = Omit<Applicant, "id" | "created_at" | "has_assessment" | "has_interview" | "interview_count" | "doc_application_letter" | "doc_pds" | "doc_wes" | "doc_diploma" | "doc_tor" | "doc_ipcr">;
 
 const emptyForm: FormData = {
   name: "", previous_position: "", position_applied: "", salary_grade: "",
@@ -40,14 +41,16 @@ const emptyDocs: DocFiles = {
   wes: null,
   diploma: null,
   tor: null,
+  ipcr: null,
 };
 
-const DOC_LABELS: { key: keyof DocFiles; label: string }[] = [
-  { key: "application_letter", label: "Application Letter" },
-  { key: "pds",                label: "Personal Data Sheet (PDS)" },
-  { key: "wes",                label: "Work Experience Sheet (WES)" },
-  { key: "diploma",            label: "Diploma" },
-  { key: "tor",                label: "Transcript of Records (TOR)" },
+const DOC_LABELS: { key: keyof DocFiles; label: string; required: boolean }[] = [
+  { key: "application_letter", label: "Application Letter",             required: true },
+  { key: "pds",                label: "Personal Data Sheet (PDS)",      required: true },
+  { key: "wes",                label: "Work Experience Sheet (WES)",    required: true },
+  { key: "diploma",            label: "Diploma",                        required: true },
+  { key: "tor",                label: "Transcript of Records (TOR)",    required: true },
+  { key: "ipcr",               label: "IPCR / Performance Rating",      required: false },
 ];
 
 // ─── File Upload Field ────────────────────────────────────────────────────────
@@ -66,7 +69,11 @@ function FileUploadField({
   return (
     <div className="grid gap-1">
       <Label className="text-xs">
-        {label} {required && <span className="text-red-500">*</span>}
+        {label}{" "}
+        {required
+          ? <span className="text-red-500">*</span>
+          : <span className="text-muted-foreground font-normal">(optional)</span>
+        }
       </Label>
       <div className="flex items-center gap-2">
         <button
@@ -141,7 +148,10 @@ function ApplicantForm({
     }
   };
 
-  const allDocsProvided = isEditing || DOC_LABELS.every(({ key }) => docs[key] !== null);
+  // Only required docs must be filled; ipcr is optional
+  const allDocsProvided = isEditing || DOC_LABELS
+    .filter((d) => d.required)
+    .every(({ key }) => docs[key] !== null);
 
   return (
     <div className="grid gap-4 max-h-[75vh] overflow-y-auto pr-1">
@@ -176,7 +186,6 @@ function ApplicantForm({
               </p>
             )}
         </div>
-        {/* ✅ Renamed from "Previous Position" to "Position" */}
         <div className="grid gap-2">
           <Label>Position</Label>
           <Input value={form.previous_position || ""} onChange={(e) => set("previous_position", e.target.value)} />
@@ -220,19 +229,19 @@ function ApplicantForm({
       <div className="border-t pt-3">
         <p className="text-sm font-medium mb-3 flex items-center gap-2">
           <FolderOpen className="h-4 w-4" />
-          Required Documents
-          {!isEditing && <span className="text-red-500 text-xs font-normal">(all required)</span>}
+          Documents
+          {!isEditing && <span className="text-red-500 text-xs font-normal">(required fields marked *)</span>}
           {isEditing && <span className="text-muted-foreground text-xs font-normal">(upload to replace)</span>}
         </p>
         <div className="grid gap-2">
-          {DOC_LABELS.map(({ key, label }) => (
+          {DOC_LABELS.map(({ key, label, required }) => (
             <FileUploadField
               key={key}
               label={label}
               file={docs[key]}
               existingUrl={existingDocs?.[`doc_${key}`]}
               onChange={(f) => setDoc(key, f)}
-              required={!isEditing}
+              required={!isEditing && required}
             />
           ))}
         </div>
@@ -263,6 +272,7 @@ function DocumentsDialog({ applicant }: { applicant: Applicant }) {
     { label: "Work Experience Sheet (WES)",  url: applicant.doc_wes },
     { label: "Diploma",                      url: applicant.doc_diploma },
     { label: "Transcript of Records (TOR)",  url: applicant.doc_tor },
+    { label: "IPCR / Performance Rating",    url: applicant.doc_ipcr },
   ];
 
   const hasAny = docs.some((d) => d.url);
@@ -388,8 +398,11 @@ export default function ApplicantsPage() {
         uploadApplicantDoc(data.name, "diploma",            docs.diploma!),
         uploadApplicantDoc(data.name, "tor",                docs.tor!),
       ]);
+      const doc_ipcr = docs.ipcr
+        ? await uploadApplicantDoc(data.name, "ipcr", docs.ipcr)
+        : null;
       createMut.mutate(
-        { ...data, doc_application_letter, doc_pds, doc_wes, doc_diploma, doc_tor },
+        { ...data, doc_application_letter, doc_pds, doc_wes, doc_diploma, doc_tor, doc_ipcr },
         { onSuccess: () => setDialogOpen(false) }
       );
     } catch (e: any) {
@@ -498,6 +511,7 @@ export default function ApplicantsPage() {
                       doc_wes: editing.doc_wes,
                       doc_diploma: editing.doc_diploma,
                       doc_tor: editing.doc_tor,
+                      doc_ipcr: editing.doc_ipcr,
                     } : undefined}
                     onSubmit={editing ? handleUpdate : handleCreate}
                     onClose={() => { setDialogOpen(false); setEditing(null); }}
@@ -523,7 +537,6 @@ export default function ApplicantsPage() {
                     <TableHead>Name</TableHead>
                     <TableHead>Position Applied</TableHead>
                     <TableHead>SG</TableHead>
-                    {/* ✅ Changed from "Vacant Positions" to "Position" */}
                     <TableHead>Present Position</TableHead>
                     <TableHead>Office</TableHead>
                     <TableHead>Status</TableHead>
@@ -536,7 +549,6 @@ export default function ApplicantsPage() {
                       <TableCell className="font-medium">{a.name}</TableCell>
                       <TableCell>{a.position_applied}</TableCell>
                       <TableCell>{a.salary_grade || "—"}</TableCell>
-                      {/* ✅ Changed from vacant_positions to previous_position */}
                       <TableCell>{a.previous_position || "—"}</TableCell>
                       <TableCell>{a.office || "—"}</TableCell>
                       <TableCell>
