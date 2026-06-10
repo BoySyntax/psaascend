@@ -17,6 +17,7 @@ export type Applicant = {
   vacant_positions?: string;
   created_at: string;
   office_id?: string | null;
+  status?: "active" | "dns" | "withdrawn" | null;
   has_assessment?: boolean;
   has_interview?: boolean;
   interview_count?: number;
@@ -25,9 +26,10 @@ export type Applicant = {
   doc_wes?: string | null;
   doc_diploma?: string | null;
   doc_tor?: string | null;
+  doc_ipcr?: string | null;
 };
 
-const TOTAL_INTERVIEW_ACCOUNTS = 5; // total non-superadmin accounts
+const TOTAL_INTERVIEW_ACCOUNTS = 5;
 export { TOTAL_INTERVIEW_ACCOUNTS };
 
 export async function uploadApplicantDoc(
@@ -124,6 +126,7 @@ export function useCreateApplicant() {
       const { error } = await supabase.from("applicants").insert({
         ...data,
         office_id: officeId,
+        status: "active",
       });
       if (error) throw error;
     },
@@ -145,6 +148,28 @@ export function useUpdateApplicant() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["applicants"] });
       toast.success("Applicant updated");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+}
+
+export function useUpdateApplicantStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: "active" | "dns" | "withdrawn" }) => {
+      const { error } = await supabase.from("applicants").update({ status }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["applicants"] });
+      qc.invalidateQueries({ queryKey: ["rankings"] });
+      toast.success(
+        vars.status === "dns"
+          ? "Marked as Did Not Show Up"
+          : vars.status === "withdrawn"
+          ? "Marked as Withdrawn"
+          : "Marked as Active"
+      );
     },
     onError: (e) => toast.error(e.message),
   });

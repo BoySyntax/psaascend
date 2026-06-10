@@ -32,6 +32,7 @@ type RankedApplicant = Applicant & {
   complete: boolean;
   rater_count_assess: number;
   rater_count_inter: number;
+  status?: string | null;
 };
 
 function useRankings() {
@@ -41,7 +42,7 @@ function useRankings() {
     queryFn: async () => {
       const { data: applicants, error: e1 } = await supabase
         .from("applicants")
-        .select("id, name, position_applied, salary_grade, office, eligibility, vacant_positions")
+        .select("id, name, position_applied, salary_grade, office, eligibility, vacant_positions, status")
         .eq("office_id", officeId);
       if (e1) throw e1;
 
@@ -152,11 +153,16 @@ function useRankings() {
           grand_total:      (hasAssess && hasInter) ? round(p1 + p2) : null,
           complete:         hasAssess && hasInter,
           rater_count_assess: assess?.count ?? 0,
+          status: app.status ?? null,
           rater_count_inter:  inter?.count  ?? 0,
         };
       });
 
       ranked.sort((a, b) => {
+        const aInactive = a.status === "dns" || a.status === "withdrawn";
+        const bInactive = b.status === "dns" || b.status === "withdrawn";
+        if (aInactive && !bInactive) return 1;
+        if (!aInactive && bInactive) return -1;
         if (a.complete && !b.complete) return -1;
         if (!a.complete && b.complete) return 1;
         return (b.grand_total || 0) - (a.grand_total || 0);
@@ -354,8 +360,10 @@ export default function RankingsPage() {
 
   const emptyCount = Math.max(0, 11 - filteredRows.length);
 
-  const rowBg = (idx: number, complete: boolean): string => {
-    if (!complete) return "transparent";
+  const rowBg = (idx: number, r: RankedApplicant): string => {
+    if (r.status === "dns")       return "#fef2f2";
+    if (r.status === "withdrawn") return "#faf5ff";
+    if (!r.complete) return "transparent";
     if (idx === 0) return "#fff9c4";
     if (idx === 1) return "#f3f4f6";
     if (idx === 2) return "#f9fafb";
@@ -487,37 +495,67 @@ export default function RankingsPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredRows.map((r, idx) => (
-                  <tr key={r.id} style={{ backgroundColor: rowBg(idx, r.complete) }}>
-                    <td style={{ ...s.td, fontWeight: 700 }}>{r.complete ? idx + 1 : "—"}</td>
-                    <td style={{ ...s.td, textAlign: "left", fontWeight: 500 }}>{r.name}</td>
-                    <td style={{ ...s.td, textAlign: "left", fontSize: "9px" }}>{r.position_applied || "—"}</td>
-                    <td style={s.td}>{r.salary_grade || "—"}</td>
-                    <td style={{ ...s.td, textAlign: "left", fontSize: "9px" }}>{r.office || "—"}</td>
-                    <td style={{ ...s.td, textAlign: "left", fontSize: "9px" }}>{r.eligibility || "—"}</td>
-                    <td style={s.td}><Num val={r.education_pts} /></td>
-                    <td style={s.td}><Num val={r.training_pts} /></td>
-                    <td style={s.td}><Num val={r.experience_pts} /></td>
-                    <td style={s.td}><Num val={r.eligibility_pts} /></td>
-                    <td style={{ ...s.td, fontWeight: 700, background: "#dbeafe" }}><Num val={r.part1_total} /></td>
-                    {(["c1","c2","c3","c4","c5","c6","c7","c8","c9","c10"] as const).map((k) => (
-                      <td key={k} style={s.td}><Num val={r[k]} /></td>
-                    ))}
-                    <td style={{ ...s.td, fontWeight: 700, background: "#dcfce7" }}><Num val={r.part2_total} /></td>
-                    <td style={{ ...s.td, fontWeight: 700, fontSize: "11px", color: "#1d4ed8" }}>
-                      {r.grand_total !== null
-                        ? r.grand_total
-                        : <Badge variant="secondary" style={{ fontSize: "8px", padding: "0 4px" }}>pending</Badge>}
-                    </td>
-                    <td style={s.td}>
-                      {r.complete
-                        ? idx === 0
-                          ? <span style={{ fontWeight: 700, color: "#1d4ed8" }}>Rank 1</span>
-                          : <Badge variant="outline" style={{ fontSize: "8px" }}>Qualified</Badge>
-                        : <Badge variant="secondary" style={{ fontSize: "8px" }}>Incomplete</Badge>}
-                    </td>
-                  </tr>
-                ))}
+                {filteredRows.map((r, idx) => {
+                  const isDns       = r.status === "dns";
+                  const isWithdrawn = r.status === "withdrawn";
+                  const isInactive  = isDns || isWithdrawn;
+                  const strikeColor = isDns ? "#dc2626" : isWithdrawn ? "#7c3aed" : undefined;
+                  const dnsStyle    = isInactive ? { textDecoration: "line-through" as const, color: strikeColor } : {};
+
+                  return (
+                    <tr key={r.id} style={{ backgroundColor: rowBg(idx, r), opacity: isInactive ? 0.8 : 1 }}>
+                      <td style={{ ...s.td, fontWeight: 700, ...dnsStyle }}>
+                        {isInactive ? "—" : r.complete ? idx + 1 : "—"}
+                      </td>
+                      <td style={{ ...s.td, textAlign: "left", fontWeight: 500, ...dnsStyle }}>
+                        {r.name}
+                        {isInactive && (
+                          <span style={{
+                            marginLeft: 4, fontSize: "8px", fontWeight: 700,
+                            color: strikeColor, textDecoration: "none",
+                          }}>
+                            {isDns ? "(DNS)" : "(WD)"}
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ ...s.td, textAlign: "left", fontSize: "9px", ...dnsStyle }}>{r.position_applied || "—"}</td>
+                      <td style={{ ...s.td, ...dnsStyle }}>{r.salary_grade || "—"}</td>
+                      <td style={{ ...s.td, textAlign: "left", fontSize: "9px", ...dnsStyle }}>{r.office || "—"}</td>
+                      <td style={{ ...s.td, textAlign: "left", fontSize: "9px", ...dnsStyle }}>{r.eligibility || "—"}</td>
+                      <td style={s.td}><Num val={r.education_pts} /></td>
+                      <td style={s.td}><Num val={r.training_pts} /></td>
+                      <td style={s.td}><Num val={r.experience_pts} /></td>
+                      <td style={s.td}><Num val={r.eligibility_pts} /></td>
+                      <td style={{ ...s.td, fontWeight: 700, background: "#dbeafe" }}><Num val={r.part1_total} /></td>
+                      {(["c1","c2","c3","c4","c5","c6","c7","c8","c9","c10"] as const).map((k) => (
+                        <td key={k} style={s.td}><Num val={r[k]} /></td>
+                      ))}
+                      <td style={{ ...s.td, fontWeight: 700, background: "#dcfce7" }}><Num val={r.part2_total} /></td>
+                      <td style={{ ...s.td, fontWeight: 700, fontSize: "11px", color: "#1d4ed8" }}>
+                        {r.grand_total !== null
+                          ? r.grand_total
+                          : <Badge variant="secondary" style={{ fontSize: "8px", padding: "0 4px" }}>pending</Badge>}
+                      </td>
+                      <td style={s.td}>
+                        {isDns ? (
+                          <Badge variant="destructive" style={{ fontSize: "8px", background: "#dc2626" }}>
+                            Did Not Show Up
+                          </Badge>
+                        ) : isWithdrawn ? (
+                          <Badge style={{ fontSize: "8px", background: "#7c3aed", color: "#fff", border: "none" }}>
+                            Withdrawn
+                          </Badge>
+                        ) : r.complete ? (
+                          idx === 0
+                            ? <span style={{ fontWeight: 700, color: "#1d4ed8" }}>Rank 1</span>
+                            : <Badge variant="outline" style={{ fontSize: "8px" }}>Qualified</Badge>
+                        ) : (
+                          <Badge variant="secondary" style={{ fontSize: "8px" }}>Incomplete</Badge>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
                 {Array.from({ length: emptyCount }).map((_, i) => (
                   <tr key={`empty-${i}`}>
                     <td style={{ ...s.td, color: "#d1d5db", height: "28px" }}>{filteredRows.length + i + 1}</td>
